@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+    image: backend-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3000
+      - DATABASE_FILE=/app/country_api_prod.db
+    volumes:
+      - ./country_api_prod.db:/app/country_api_prod.db
+    # Comment out restart for debugging
+    # restart: unless-stopped
