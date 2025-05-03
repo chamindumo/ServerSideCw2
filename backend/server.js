@@ -113,6 +113,7 @@ app.get('/auth/csrf-token', async (req, res) => {
 
 // Swagger UI setup
 if (process.env.NODE_ENV =='production') {
+
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
   console.log('Swagger docs available at http://localhost:3000/api-docs');
 } else {
