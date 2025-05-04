@@ -1,51 +1,119 @@
 <template>
   <div id="app">
-    <nav>
+    <nav class="navbar">
       <ul>
-        <li><router-link to="/" class="button">Home</router-link></li>
-        <li><router-link to="/user/login" class="button">User Login</router-link></li>
+        <li><router-link to="/" class="nav-link">Home</router-link></li>
+        <li><router-link to="/follow/feed" class="nav-link">Follow Feed</router-link></li>
+        <li v-if="!isLoggedIn"><router-link to="/user/signup" class="nav-link">Sign Up</router-link></li>
+        <li v-if="!isLoggedIn"><router-link to="/user/login" class="nav-link">Login</router-link></li>
+        <li v-if="isLoggedIn"><router-link to="/blogs/add" class="nav-link">Add Blog</router-link></li>
+        <li v-if="isLoggedIn" class="dropdown">
+          <span class="nav-link">User</span>
+          <ul class="dropdown-menu">
+            <li><router-link to="/user/dashboard" class="dropdown-item">Dashboard</router-link></li>
+            <li><router-link to="/blogs/add" class="dropdown-item">Add Blog</router-link></li>
+            <li><button @click="logout" class="dropdown-item">Logout</button></li>
+          </ul>
+        </li>
       </ul>
     </nav>
-    <router-view />
+    <router-view @login-success="handleLoginSuccess" />
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
+  name: "App",
+  data() {
+    return {
+      isLoggedIn: !!localStorage.getItem("userToken"), // Check if the user is logged in
+    };
+  },
+  methods: {
+    handleLoginSuccess() {
+      this.isLoggedIn = true; // Update the login state
+    },
+    logout() {
+      localStorage.removeItem("userToken"); // Remove the JWT token
+      localStorage.removeItem("csrfToken"); // Remove the CSRF token
+      this.isLoggedIn = false; // Update the login state
+      this.$router.push("/"); // Redirect to the home page
+    },
+  },
 };
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-nav ul {
-  list-style: none;
+body {
+  font-family: 'Helvetica, Arial, sans-serif';
+  background-color: #f9f9f9;
+  margin: 0;
   padding: 0;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.navbar {
+  background-color: #2c3e50;
+  padding: 10px 20px;
   display: flex;
   justify-content: center;
+}
+
+.navbar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
   gap: 20px;
 }
-nav ul li {
-  display: inline;
+
+.navbar ul li {
+  position: relative;
 }
-nav ul li .button {
-  display: inline-block; /* Ensure the link behaves like a button */
+
+.navbar ul li .nav-link {
   text-decoration: none;
   color: white;
-  background-color: #42b983;
-  padding: 10px 20px;
+  font-weight: bold;
+  padding: 8px 15px;
   border-radius: 5px;
-  cursor: pointer; /* Add pointer cursor for better UX */
   transition: background-color 0.3s;
 }
-nav ul li .button:hover {
-  background-color: #369f6b;
+
+.navbar ul li .nav-link:hover {
+  background-color: #34495e;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 10px 20px;
+  text-decoration: none;
+  color: #2c3e50;
+  display: block;
+}
+
+.dropdown-item:hover {
+  background-color: #ecf0f1;
 }
 </style>

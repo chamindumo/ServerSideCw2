@@ -225,9 +225,6 @@ router.get('/search', (req, res, next) => {
  *       500:
  *         description: Server error
  */
-router.get('/:id', (req, res, next) => {
-  req.csrfToken(); // Validate CSRF token
-  next();
-}, blogController.getPostById);
+router.get('/:id', blogController.getPostById);
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const BlogPostDAO = require('../dao/BlogPostDAO');
+const axios = require('axios');
 
 exports.createPost = async (req, res) => {
   const { title, content, country, visitDate } = req.body;
@@ -82,7 +83,13 @@ exports.getPostById = async (req, res) => {
   try {
     const post = await BlogPostDAO.getPostById(id);
     if (!post) return res.status(404).json({ error: 'Blog post not found' });
-    res.json(post);
+
+    // Fetch the country flag URL
+    const countryResponse = await axios.get(`https://restcountries.com/v3.1/name/${post.country}`);
+    const countryData = countryResponse.data[0];
+    const flagUrl = countryData?.flags?.png || null;
+
+    res.json({ ...post, flagUrl }); // Include the flag URL in the response
   } catch (err) {
     console.error('Error fetching blog post:', err);
     res.status(500).json({ error: 'Failed to fetch blog post' });

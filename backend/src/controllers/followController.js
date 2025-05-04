@@ -1,4 +1,5 @@
 const FollowDAO = require('../dao/FollowDAO');
+const axios = require('axios');
 
 exports.followUser = async (req, res) => {
   const { id: followingId } = req.params;
@@ -30,9 +31,24 @@ exports.getFollowedPosts = async (req, res) => {
 
   try {
     const posts = await FollowDAO.getFollowedPosts(req.userId, parseInt(limit), parseInt(offset));
-    res.json(posts);
+
+    // Fetch country flags for each post
+    const postsWithFlags = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          const countryResponse = await axios.get(`https://restcountries.com/v3.1/name/${post.country}`);
+          const countryData = countryResponse.data[0];
+          const flagUrl = countryData?.flags?.png || null;
+          return { ...post, flagUrl };
+        } catch {
+          return { ...post, flagUrl: null }; // Default to null if the flag cannot be fetched
+        }
+      })
+    );
+
+    res.json(postsWithFlags);
   } catch (err) {
-    console.error('Error fetching followed posts:', err);
-    res.status(500).json({ error: 'Failed to fetch followed posts' });
+    console.error("Error fetching followed posts:", err);
+    res.status(500).json({ error: "Failed to fetch followed posts" });
   }
 };
