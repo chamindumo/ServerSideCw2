@@ -29,18 +29,12 @@ const axios = require('axios');
  */
 exports.getCountryData = async (req, res) => {
   try {
-    // Fetch data from an external API (e.g., RestCountries.com)
     const response = await axios.get('https://restcountries.com/v3.1/all');
-    const countries = response.data.map((country) => ({
-      name: country.name.common, // Extract country name
-      region: country.region, // Extract region
-      population: country.population, // Extract population
-    }));
-
-    res.json(countries); // Return the list of countries
-  } catch (error) {
-    console.error('Error fetching country data:', error.message); // Log error
-    res.status(500).json({ error: 'Failed to fetch country data' }); // Return error response
+    const countries = response.data;
+    res.json(countries); // Return the full country data
+  } catch (err) {
+    console.error('Error fetching country data:', err);
+    res.status(500).json({ error: 'Failed to fetch country data' });
   }
 };
 

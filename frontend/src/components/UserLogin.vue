@@ -4,8 +4,8 @@
     <h1>User Login</h1>
     <form @submit.prevent="login"> <!-- Prevent default form submission -->
       <div>
-        <label for="username">Username:</label>
-        <input type="text" id="username" v-model="username" required /> <!-- Bind username input -->
+        <label for="email">Email:</label>
+        <input type="email" id="email" v-model="email" required /> <!-- Bind email input -->
       </div>
       <div>
         <label for="password">Password:</label>
@@ -24,7 +24,7 @@ export default {
   name: "UserLogin",
   data() {
     return {
-      username: "", // User's username
+      email: "", // User's email
       password: "", // User's password
       error: null, // Error message
     };
@@ -50,7 +50,7 @@ export default {
         const response = await axios.post(
           "http://localhost:3000/user/login",
           {
-            username: this.username, // Send username
+            email: this.email, // Send email
             password: this.password, // Send password
           },
           {
@@ -62,7 +62,7 @@ export default {
         );
 
         localStorage.setItem("userToken", response.data.token); // Store JWT token in localStorage
-        this.$router.push("/user/dashboard"); // Redirect to user dashboard
+        this.$router.push("/"); // Redirect to blogs page
       } catch (err) {
         this.error = "Invalid credentials or server error. Please try again."; // Set error message
       }

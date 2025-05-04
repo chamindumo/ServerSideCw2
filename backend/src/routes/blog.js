@@ -3,6 +3,12 @@ const router = express.Router();
 const blogController = require('../controllers/blogController');
 const { verifyToken } = require('../middleware/auth');
 
+// All routes require CSRF token validation
+router.use((req, res, next) => {
+  req.csrfToken();
+  next();
+});
+
 /**
  * @swagger
  * /blog:
@@ -121,6 +127,8 @@ router.delete('/:id', verifyToken, blogController.deletePost);
  *   get:
  *     summary: Get all blog posts
  *     tags: [Blog]
+ *     security:
+ *       - csrfAuth: []
  *     parameters:
  *       - in: query
  *         name: limit
@@ -141,10 +149,15 @@ router.delete('/:id', verifyToken, blogController.deletePost);
  *     responses:
  *       200:
  *         description: List of blog posts
+ *       403:
+ *         description: Invalid CSRF token
  *       500:
  *         description: Server error
  */
-router.get('/', blogController.getAllPosts);
+router.get('/', (req, res, next) => {
+  req.csrfToken(); // Validate CSRF token
+  next();
+}, blogController.getAllPosts);
 
 /**
  * @swagger
@@ -152,6 +165,8 @@ router.get('/', blogController.getAllPosts);
  *   get:
  *     summary: Search blog posts
  *     tags: [Blog]
+ *     security:
+ *       - csrfAuth: []
  *     parameters:
  *       - in: query
  *         name: query
@@ -177,9 +192,42 @@ router.get('/', blogController.getAllPosts);
  *     responses:
  *       200:
  *         description: List of matching blog posts
+ *       403:
+ *         description: Invalid CSRF token
  *       500:
  *         description: Server error
  */
-router.get('/search', blogController.searchPosts);
+router.get('/search', (req, res, next) => {
+  req.csrfToken(); // Validate CSRF token
+  next();
+}, blogController.searchPosts);
+
+/**
+ * @swagger
+ * /blog/{id}:
+ *   get:
+ *     summary: Get a blog post by ID
+ *     tags: [Blog]
+ *     security:
+ *       - csrfAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Blog post ID
+ *     responses:
+ *       200:
+ *         description: Blog post retrieved successfully
+ *       404:
+ *         description: Blog post not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id', (req, res, next) => {
+  req.csrfToken(); // Validate CSRF token
+  next();
+}, blogController.getPostById);
 
 module.exports = router;

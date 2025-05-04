@@ -19,11 +19,20 @@ class UserDAO {
     });
   }
 
+  static async getUserByEmail(email) {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
+        if (err) return reject(err);
+        resolve(row);
+      });
+    });
+  }
+
   static async createUser(user) {
     return new Promise((resolve, reject) => {
       db.run(
-        'INSERT INTO users (username, password, role, plan, api_key_limit) VALUES (?, ?, ?, ?, ?)',
-        [user.username, user.password, user.role, user.plan, user.apiKeyLimit],
+        'INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)',
+        [user.firstname, user.lastname, user.email, user.password],
         function (err) {
           if (err) return reject(err);
           resolve(this.lastID);

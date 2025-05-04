@@ -22,6 +22,7 @@ const { verifyToken } = require('../middleware/auth'); // Import middleware for 
  */
 router.get('/csrf-token', (req, res) => {
   const csrfToken = req.csrfToken(); // Generate a CSRF token
+  res.cookie('XSRF-TOKEN', csrfToken); // Set CSRF token in a cookie
   res.json({ csrfToken }); // Return the CSRF token in JSON format
 });
 

@@ -1,24 +1,25 @@
 import Vue from "vue";
 import Router from "vue-router";
-import AdminLogin from "../components/AdminLogin.vue"; // Admin login page
-import UserLogin from "../components/UserLogin.vue"; // User login page
-import AdminDashboard from "../components/AdminDashboard.vue"; // Admin dashboard
-import CreateUser from "../components/CreateUser.vue"; // Create user page
-import UpdateUser from "../components/UpdateUser.vue"; // Update user page
-import UserDashboard from "../components/UserDashboard.vue"; // User dashboard
+import UserLogin from "../components/UserLogin.vue";
+import UserDashboard from "../components/UserDashboard.vue";
+import BlogList from "../components/BlogList.vue";
+import BlogDetails from "../components/BlogDetails.vue";
+import FollowFeed from "../components/FollowFeed.vue";
+import CommentSection from "../components/CommentSection.vue";
 
-Vue.use(Router); // Enable Vue Router
+Vue.use(Router);
 
 const routes = [
-  { path: "/admin/login", name: "AdminLogin", component: AdminLogin }, // Route for admin login
-  { path: "/user/login", name: "UserLogin", component: UserLogin }, // Route for user login
-  { path: "/admin/dashboard", name: "AdminDashboard", component: AdminDashboard }, // Route for admin dashboard
-  { path: "/admin/create-user", name: "CreateUser", component: CreateUser }, // Route for creating a user
-  { path: "/admin/update-user", name: "UpdateUser", component: UpdateUser }, // Route for updating a user
-  { path: "/user/dashboard", name: "UserDashboard", component: UserDashboard }, // Route for user dashboard
+  { path: "/", name: "Home", component: BlogList }, // Set BlogList as the default route
+  { path: "/user/login", name: "UserLogin", component: UserLogin },
+  { path: "/user/dashboard", name: "UserDashboard", component: UserDashboard },
+  { path: "/blogs", name: "BlogList", component: BlogList },
+  { path: "/blogs/:id", name: "BlogDetails", component: BlogDetails, props: true },
+  { path: "/follow/feed", name: "FollowFeed", component: FollowFeed },
+  { path: "/comments/:postId", name: "CommentSection", component: CommentSection, props: true },
 ];
 
 export default new Router({
-  mode: "history", // Use history mode for clean URLs
-  routes, // Register routes
+  mode: "history",
+  routes,
 });

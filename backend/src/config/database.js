@@ -9,29 +9,48 @@ const db = new sqlite3.Database(dbFile);
 const getLocalTime = () => new Date().toISOString().slice(0, 19).replace('T', ' ');
 
 db.serialize(() => {
-  // Create the users table
+  // Create the users table with the required columns
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
+      firstname TEXT NOT NULL,
+      lastname TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      role TEXT DEFAULT 'user', 
-      plan TEXT DEFAULT 'basic', 
-      api_key_limit INTEGER DEFAULT 50, 
-      created_at DATETIME DEFAULT '${getLocalTime()}' 
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-  // Create the api_keys table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS api_keys (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL, 
-      api_key TEXT UNIQUE NOT NULL, 
-      is_active INTEGER DEFAULT 1, 
-      created_at DATETIME DEFAULT '${getLocalTime()}', 
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE )
-  `);
+  // Add new columns to the users table if they do not already exist
+  db.run(`ALTER TABLE users ADD COLUMN firstname TEXT NOT NULL DEFAULT ''`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding firstname column:', err);
+    }
+  });
+
+  db.run(`ALTER TABLE users ADD COLUMN lastname TEXT NOT NULL DEFAULT ''`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding lastname column:', err);
+    }
+  });
+
+  db.run(`ALTER TABLE users ADD COLUMN email TEXT UNIQUE NOT NULL DEFAULT ''`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding email column:', err);
+    }
+  });
+
+  db.run(`ALTER TABLE users ADD COLUMN password TEXT NOT NULL DEFAULT ''`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding password column:', err);
+    }
+  });
+
+  db.run(`ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding created_at column:', err);
+    }
+  });
 
   // Create the csrf_tokens table
   db.run(`
@@ -40,26 +59,6 @@ db.serialize(() => {
       csrf_token TEXT NOT NULL,
       created_at DATETIME DEFAULT '${getLocalTime()}')
   `);
-
-  // Create the api_usage table to track API usage
-  db.run(`
-    CREATE TABLE IF NOT EXISTS api_usage (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      endpoint TEXT NOT NULL, 
-      created_at DATETIME DEFAULT '${getLocalTime()}', 
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE 
-    )
-  `);
-
-  // Add tokens_used column to api_usage table if it doesn't exist
-  db.run(`
-    ALTER TABLE api_usage ADD COLUMN tokens_used INTEGER DEFAULT 0
-  `, (err) => {
-    if (err && !err.message.includes('duplicate column name')) {
-      console.error('Error adding tokens_used column:', err); // Log error if the column addition fails
-    }
-  });
 
   // Create the blog_posts table
   db.run(`
@@ -76,6 +75,36 @@ db.serialize(() => {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Ensure the likes and dislikes columns exist in the blog_posts table
+  db.run(`ALTER TABLE blog_posts ADD COLUMN likes INTEGER DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding likes column:', err);
+    }
+  });
+
+  db.run(`ALTER TABLE blog_posts ADD COLUMN dislikes INTEGER DEFAULT 0`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding dislikes column:', err);
+    }
+  });
+
+  // Update existing rows in the blog_posts table to set likes and dislikes to 0 if NULL
+  db.run(`UPDATE blog_posts SET likes = 0 WHERE likes IS NULL`, (err) => {
+    if (err) {
+      console.error('Error updating likes column:', err);
+    } else {
+      console.log('Likes column updated successfully.');
+    }
+  });
+
+  db.run(`UPDATE blog_posts SET dislikes = 0 WHERE dislikes IS NULL`, (err) => {
+    if (err) {
+      console.error('Error updating dislikes column:', err);
+    } else {
+      console.log('Dislikes column updated successfully.');
+    }
+  });
 
   // Create the comments table
   db.run(`

@@ -2,11 +2,11 @@
   <div id="app">
     <nav>
       <ul>
-        <li><router-link to="/admin/login" class="button">Admin Login</router-link></li>
+        <li><router-link to="/" class="button">Home</router-link></li>
         <li><router-link to="/user/login" class="button">User Login</router-link></li>
       </ul>
     </nav>
-    <router-view /> <!-- Ensure this renders the login pages -->
+    <router-view />
   </div>
 </template>
 

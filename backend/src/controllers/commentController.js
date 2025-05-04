@@ -29,7 +29,8 @@ exports.likePost = async (req, res) => {
   const { postId } = req.params;
 
   try {
-    await CommentDAO.toggleLikeDislike(postId, req.userId, true);
+    const changes = await CommentDAO.toggleLikeDislike(postId, true);
+    if (changes === 0) return res.status(404).json({ error: 'Blog post not found' });
     res.json({ message: 'Post liked successfully' });
   } catch (err) {
     console.error('Error liking post:', err);
@@ -41,7 +42,8 @@ exports.dislikePost = async (req, res) => {
   const { postId } = req.params;
 
   try {
-    await CommentDAO.toggleLikeDislike(postId, req.userId, false);
+    const changes = await CommentDAO.toggleLikeDislike(postId, false);
+    if (changes === 0) return res.status(404).json({ error: 'Blog post not found' });
     res.json({ message: 'Post disliked successfully' });
   } catch (err) {
     console.error('Error disliking post:', err);

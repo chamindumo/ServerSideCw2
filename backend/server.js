@@ -43,11 +43,7 @@ const swaggerOptions = {
           scheme: 'bearer',
           bearerFormat: 'JWT',
         },
-        apiKeyAuth: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'x-api-key',
-        },
+       
         csrfAuth: { // Add CSRF authentication scheme
           type: 'apiKey',
           in: 'header',
@@ -86,7 +82,11 @@ app.use(
 // CSRF error handling middleware
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).json({ error: 'Invalid CSRF token' });
+    console.error('Invalid CSRF token:', req.headers['x-csrf-token']);
+    return res.status(403).json({ 
+      error: 'Invalid CSRF token',
+      message: 'Please obtain a new CSRF token from /auth/csrf-token'
+    });
   }
   next(err);
 });
@@ -111,6 +111,17 @@ app.get('/auth/csrf-token', async (req, res) => {
   res.json({ csrfToken });
 });
 
+// Add global CSRF middleware before routes
+app.use((req, res, next) => {
+  // Skip CSRF validation for GET and HEAD requests
+  if (req.method === 'GET' || req.method === 'HEAD') {
+    return next();
+  }
+  // Validate CSRF token for all other requests
+  req.csrfToken();
+  next();
+});
+
 // Swagger UI setup
 if (process.env.NODE_ENV =='production') {
 
@@ -123,7 +134,6 @@ if (process.env.NODE_ENV =='production') {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/countries', countryRoutes);
-app.use('/admin', adminRoutes); // Admin-specific routes
 app.use('/user', userRoutes); // User-specific routes
 app.use('/blog', blogRoutes); // Blog post routes
 app.use('/follow', followRoutes); // User following routes

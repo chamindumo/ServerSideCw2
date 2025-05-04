@@ -3,6 +3,12 @@ const router = express.Router();
 const commentController = require('../controllers/commentController');
 const { verifyToken } = require('../middleware/auth');
 
+// All routes require CSRF token validation
+router.use((req, res, next) => {
+  req.csrfToken();
+  next();
+});
+
 /**
  * @swagger
  * /comment/{postId}:
@@ -47,6 +53,8 @@ router.post('/:postId', verifyToken, commentController.addComment);
  *   get:
  *     summary: Get comments for a blog post
  *     tags: [Comment]
+ *     security:
+ *       - csrfAuth: []
  *     parameters:
  *       - in: path
  *         name: postId
@@ -57,12 +65,15 @@ router.post('/:postId', verifyToken, commentController.addComment);
  *     responses:
  *       200:
  *         description: List of comments for the blog post
- *       404:
- *         description: Blog post not found
+ *       403:
+ *         description: Invalid CSRF token
  *       500:
  *         description: Server error
  */
-router.get('/:postId', commentController.getComments);
+router.get('/:postId', (req, res, next) => {
+  req.csrfToken(); // Validate CSRF token
+  next();
+}, commentController.getComments);
 
 /**
  * @swagger

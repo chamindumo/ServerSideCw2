@@ -17,7 +17,7 @@ class CommentDAO {
   static async getCommentsByPost(postId) {
     return new Promise((resolve, reject) => {
       db.all(
-        'SELECT comments.*, users.username FROM comments JOIN users ON comments.user_id = users.id WHERE post_id = ? ORDER BY created_at DESC',
+        'SELECT comments.*, comments.user_id FROM comments WHERE comments.post_id = ? ORDER BY comments.created_at DESC',
         [postId],
         (err, rows) => {
           if (err) return reject(err);
@@ -27,7 +27,7 @@ class CommentDAO {
     });
   }
 
-  static async toggleLikeDislike(postId, userId, isLike) {
+  static async toggleLikeDislike(postId, isLike) {
     return new Promise((resolve, reject) => {
       const column = isLike ? 'likes' : 'dislikes';
       db.run(

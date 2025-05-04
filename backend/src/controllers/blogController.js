@@ -75,3 +75,16 @@ exports.searchPosts = async (req, res) => {
     res.status(500).json({ error: 'Failed to search blog posts' });
   }
 };
+
+exports.getPostById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const post = await BlogPostDAO.getPostById(id);
+    if (!post) return res.status(404).json({ error: 'Blog post not found' });
+    res.json(post);
+  } catch (err) {
+    console.error('Error fetching blog post:', err);
+    res.status(500).json({ error: 'Failed to fetch blog post' });
+  }
+};

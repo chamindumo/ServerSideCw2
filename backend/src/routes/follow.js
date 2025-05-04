@@ -3,6 +3,12 @@ const router = express.Router();
 const followController = require('../controllers/followController');
 const { verifyToken } = require('../middleware/auth');
 
+// All routes require CSRF token validation
+router.use((req, res, next) => {
+  req.csrfToken();
+  next();
+});
+
 /**
  * @swagger
  * /follow/{id}/follow:
