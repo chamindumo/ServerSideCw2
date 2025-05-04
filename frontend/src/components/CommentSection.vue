@@ -4,7 +4,6 @@
     <ul>
       <li v-for="comment in comments" :key="comment.id">
         <p><strong>{{ comment.username }}:</strong> {{ comment.content }}</p>
-        <button @click="likeComment(comment.id)">Like</button>
       </li>
     </ul>
     <form @submit.prevent="addComment">
@@ -54,23 +53,7 @@ export default {
         console.error("Error adding comment:", err);
       }
     },
-    async likeComment(commentId) {
-      try {
-        const token = localStorage.getItem("userToken"); // Retrieve JWT token
-        const csrfToken = localStorage.getItem("csrfToken"); // Retrieve CSRF token
-
-        await api.post(`/comment/${commentId}/like`, {}, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Include JWT token
-            "X-CSRF-Token": csrfToken, // Include CSRF token
-          },
-        });
-        console.log("Comment liked successfully");
-      } catch (err) {
-        console.error("Error liking comment:", err);
-        this.error = err.response?.data?.error || "Failed to like comment. Please try again.";
-      }
-    },
+    
   },
 };
 </script>

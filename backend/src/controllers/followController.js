@@ -52,3 +52,15 @@ exports.getFollowedPosts = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch followed posts" });
   }
 };
+
+exports.checkFollowStatus = async (req, res) => {
+  const { id: followingId } = req.params;
+
+  try {
+    const isFollowing = await FollowDAO.isFollowing(req.userId, followingId);
+    res.json({ isFollowing });
+  } catch (err) {
+    console.error("Error checking follow status:", err);
+    res.status(500).json({ error: "Failed to check follow status" });
+  }
+};

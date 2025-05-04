@@ -39,6 +39,19 @@ class FollowDAO {
       );
     });
   }
+
+  static async isFollowing(followerId, followingId) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT COUNT(*) AS count FROM follows WHERE follower_id = ? AND following_id = ?',
+        [followerId, followingId],
+        (err, row) => {
+          if (err) return reject(err);
+          resolve(row.count > 0);
+        }
+      );
+    });
+  }
 }
 
 module.exports = FollowDAO;

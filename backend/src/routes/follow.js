@@ -18,7 +18,6 @@ router.use((req, res, next) => {
  *     security:
  *       - bearerAuth: []
  *       - csrfAuth: [] 
-
  *     parameters:
  *       - in: path
  *         name: id
@@ -97,5 +96,30 @@ router.delete('/:id/unfollow', verifyToken, followController.unfollowUser);
  *         description: Server error
  */
 router.get('/feed', verifyToken, followController.getFollowedPosts);
+
+/**
+ * @swagger
+ * /follow/{id}/status:
+ *   get:
+ *     summary: Check if the current user is following another user
+ *     tags: [Follow]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user to check follow status
+ *     responses:
+ *       200:
+ *         description: Follow status retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/status', verifyToken, followController.checkFollowStatus);
 
 module.exports = router;
