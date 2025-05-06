@@ -13,13 +13,11 @@
       </div>
       <div class="blog-content">
         <div v-html="sanitizedContent"></div>
-        <p><strong>User ID:</strong> {{ blog.user_id }}</p>
         <p><strong>Country:</strong> {{ blog.country }}</p>
         <p v-if="blog.flagUrl">
           <strong>Flag:</strong>
           <img :src="blog.flagUrl" alt="Country flag" class="country-flag" />
         </p>
-        <p><strong>Visit Date:</strong> {{ blog.visitDate }}</p>
         <div class="likes-dislikes">
           <p><strong>Likes:</strong> {{ blog.likes }}</p>
           <p><strong>Dislikes:</strong> {{ blog.dislikes }}</p>
@@ -68,7 +66,7 @@ export default {
       const response = await api.get(`/blog/${this.id}`);
       this.blog = {
         ...response.data,
-        image_path: response.data.image_path ? `http://localhost:3000${response.data.image_path}` : null,
+        image_path: response.data.image_path ? response.data.image_path : null,
       };
 
       const commentsResponse = await api.get(`/comment/${this.id}`);

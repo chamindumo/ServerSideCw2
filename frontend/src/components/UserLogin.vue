@@ -73,7 +73,7 @@ export default {
 
 <style scoped>
 .login-container {
-  max-width: 400px;
+  width: 500px;
   margin: 50px auto;
   padding: 20px;
   background: white;
@@ -97,7 +97,7 @@ export default {
 }
 
 .form-group input {
-  width: 100%;
+  width: 470px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -106,7 +106,7 @@ export default {
 .btn {
   width: 100%;
   padding: 10px;
-  background-color: #2c3e50;
+  background-color: #108836;
   color: white;
   border: none;
   border-radius: 5px;

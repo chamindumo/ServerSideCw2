@@ -107,8 +107,8 @@ export default {
   overflow: hidden;
   text-align: center;
   padding: 20px;
-  height: 400px; /* Set a fixed height for the card */
-  width: 300px;
+  height: 450px; /* Set a fixed height for the card */
+  width: 350px;
 }
 
 .blog-card img {

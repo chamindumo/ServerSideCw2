@@ -83,14 +83,71 @@ export default {
 
 <style scoped>
 .signup {
-  max-width: 400px;
-  margin: 0 auto;
-  text-align: center;
+  width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+.signup h1 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.signup form div {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.signup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+.signup input {
+  width: 470px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.signup input:focus {
+  border-color: #42b983;
+  outline: none;
+  box-shadow: 0 0 5px rgba(66, 185, 131, 0.5);
+}
+
+.signup button {
+  width: 100%;
+  padding: 10px 15px;
+  background-color: #42b983;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signup button:hover {
+  background-color: #369f6e;
+}
+
 .error {
+  margin-top: 15px;
   color: red;
+  font-weight: bold;
 }
+
 .success {
+  margin-top: 15px;
   color: green;
+  font-weight: bold;
 }
 </style>

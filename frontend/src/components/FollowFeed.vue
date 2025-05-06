@@ -116,7 +116,7 @@ export default {
   text-align: center;
   padding: 20px;
   height: 400px; /* Set a fixed height for the card */
-  width: 300px;
+  width: 350px;
 
 }
 
