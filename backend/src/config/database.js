@@ -89,6 +89,13 @@ db.serialize(() => {
     }
   });
 
+  // Add the image_path column to the blog_posts table
+  db.run(`ALTER TABLE blog_posts ADD COLUMN image_path TEXT`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding image_path column:', err);
+    }
+  });
+
   // Update existing rows in the blog_posts table to set likes and dislikes to 0 if NULL
   db.run(`UPDATE blog_posts SET likes = 0 WHERE likes IS NULL`, (err) => {
     if (err) {

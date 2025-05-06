@@ -18,6 +18,7 @@ const db = require('./src/config/database'); // Import the database connection
 const csrfService = require('./src/services/csrfService');
 const cron = require('node-cron');
 const { renewApiKeyLimits } = require('./src/services/renewService');
+const path = require('path'); // Add path module
 
 const app = express();
 
@@ -78,6 +79,9 @@ app.use(
     },
   })
 );
+
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // CSRF error handling middleware
 app.use((err, req, res, next) => {

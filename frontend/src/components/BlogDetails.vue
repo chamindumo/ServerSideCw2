@@ -8,6 +8,9 @@
         <button v-if="!isFollowing" @click="followUser(blog.user_id)" class="follow-btn">Follow</button>
         <p v-else class="followed-text">You are following this user</p>
       </div>
+      <div v-if="blog.image_path" class="blog-image-container">
+        <img :src="blog.image_path" alt="Blog Image" class="blog-image" />
+      </div>
       <div class="blog-content">
         <p>{{ blog.content }}</p>
         <p><strong>User ID:</strong> {{ blog.user_id }}</p>
@@ -62,7 +65,10 @@ export default {
   async mounted() {
     try {
       const response = await api.get(`/blog/${this.id}`);
-      this.blog = response.data;
+      this.blog = {
+        ...response.data,
+        image_path: response.data.image_path ? `http://localhost:3000${response.data.image_path}` : null,
+      };
 
       const commentsResponse = await api.get(`/comment/${this.id}`);
       this.comments = commentsResponse.data;
@@ -172,6 +178,17 @@ export default {
 
 .blog-content {
   margin-top: 20px;
+}
+
+.blog-image-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.blog-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
 }
 
 .country-flag {

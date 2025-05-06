@@ -26,8 +26,10 @@ class BlogPostDAO {
   static async updatePost(post) {
     return new Promise((resolve, reject) => {
       db.run(
-        'UPDATE blog_posts SET title = ?, content = ?, country = ?, visit_date = ?, likes = ?, dislikes = ? WHERE id = ? AND user_id = ?',
-        [post.title, post.content, post.country, post.visitDate, post.likes, post.dislikes, post.id, post.userId],
+        `UPDATE blog_posts 
+         SET title = ?, content = ?, country = ?, visit_date = ?, likes = ?, dislikes = ?, image_path = COALESCE(?, image_path)
+         WHERE id = ? AND user_id = ?`,
+        [post.title, post.content, post.country, post.visitDate, post.likes, post.dislikes, post.imagePath, post.id, post.userId],
         function (err) {
           if (err) return reject(err);
           resolve(this.changes);
@@ -65,6 +67,19 @@ class BlogPostDAO {
       db.all(
         `SELECT * FROM blog_posts WHERE country LIKE ? OR user_id IN (SELECT id FROM users WHERE user_id LIKE ?) ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
         [`%${query}%`, `%${query}%`, limit, offset],
+        (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
+  static async getBlogsByUserId(userId) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        'SELECT * FROM blog_posts WHERE user_id = ? ORDER BY created_at DESC',
+        [userId],
         (err, rows) => {
           if (err) return reject(err);
           resolve(rows);

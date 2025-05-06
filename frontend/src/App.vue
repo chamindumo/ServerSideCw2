@@ -26,10 +26,15 @@ export default {
   name: "App",
   data() {
     return {
-      isLoggedIn: !!localStorage.getItem("userToken"), // Check if the user is logged in
+      isLoggedIn: !!localStorage.getItem("userToken") && this.checkUserData(), // Check if user data exists
     };
   },
   methods: {
+    checkUserData() {
+      // Add logic to verify if user data exists
+      const userToken = localStorage.getItem("userToken");
+      return !!userToken; // Return true if token exists, false otherwise
+    },
     handleLoginSuccess() {
       this.isLoggedIn = true; // Update the login state
     },

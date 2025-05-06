@@ -18,6 +18,10 @@
         <label for="visitDate">Visit Date:</label>
         <input type="date" id="visitDate" v-model="visitDate" required />
       </div>
+      <div>
+        <label for="image">Image:</label>
+        <input type="file" id="image" @change="handleImageUpload" accept="image/*" />
+      </div>
       <button type="submit">Submit</button>
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">{{ success }}</p>
@@ -36,24 +40,31 @@ export default {
       content: "",
       country: "",
       visitDate: "",
+      image: null, // Store the uploaded image
       error: null,
       success: null,
     };
   },
   methods: {
+    handleImageUpload(event) {
+      this.image = event.target.files[0]; // Store the selected file
+    },
     async submitBlog() {
       try {
         const token = localStorage.getItem("userToken"); // Retrieve JWT token
-        const payload = {
-          title: this.title,
-          content: this.content,
-          country: this.country,
-          visitDate: this.visitDate,
-        };
+        const formData = new FormData();
+        formData.append("title", this.title);
+        formData.append("content", this.content);
+        formData.append("country", this.country);
+        formData.append("visitDate", this.visitDate);
+        if (this.image) {
+          formData.append("image", this.image); // Append the image file
+        }
 
-        await api.post("/blog", payload, {
+        await api.post("/blog", formData, {
           headers: {
             Authorization: `Bearer ${token}`, // Include JWT token
+            "Content-Type": "multipart/form-data", // Set content type for file upload
           },
         });
 
@@ -71,6 +82,7 @@ export default {
       this.content = "";
       this.country = "";
       this.visitDate = "";
+      this.image = null;
     },
   },
 };

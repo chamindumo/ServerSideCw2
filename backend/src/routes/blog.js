@@ -1,7 +1,21 @@
 const express = require('express');
-const router = express.Router();
+const multer = require('multer'); // Add multer for file uploads
+const path = require('path');
 const blogController = require('../controllers/blogController');
 const { verifyToken } = require('../middleware/auth');
+
+const router = express.Router();
+
+// Configure multer for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Save images in the 'uploads' directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`); // Use a unique filename
+  },
+});
+const upload = multer({ storage });
 
 // All routes require CSRF token validation
 router.use((req, res, next) => {
@@ -22,7 +36,7 @@ router.use((req, res, next) => {
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -35,6 +49,9 @@ router.use((req, res, next) => {
  *               visitDate:
  *                 type: string
  *                 format: date
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Blog post created successfully
@@ -45,7 +62,7 @@ router.use((req, res, next) => {
  *       500:
  *         description: Server error
  */
-router.post('/', verifyToken, blogController.createPost);
+router.post('/', verifyToken, upload.single('image'), blogController.createPost);
 
 /**
  * @swagger
@@ -67,7 +84,7 @@ router.post('/', verifyToken, blogController.createPost);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -80,6 +97,9 @@ router.post('/', verifyToken, blogController.createPost);
  *               visitDate:
  *                 type: string
  *                 format: date
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: Blog post updated successfully
@@ -90,7 +110,7 @@ router.post('/', verifyToken, blogController.createPost);
  *       500:
  *         description: Server error
  */
-router.put('/:id', verifyToken, blogController.updatePost);
+router.put('/:id', verifyToken, upload.single('image'), blogController.updatePost);
 
 /**
  * @swagger
@@ -226,5 +246,31 @@ router.get('/search', (req, res, next) => {
  *         description: Server error
  */
 router.get('/:id', blogController.getPostById);
+
+/**
+ * @swagger
+ * /blog/user/{userId}:
+ *   get:
+ *     summary: Get all blogs created by a specific user
+ *     tags: [Blog]
+ *     security:
+ *       - csrfAuth: []
+ * 
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user
+ *     responses:
+ *       200:
+ *         description: List of blogs created by the user
+ *       404:
+ *         description: User not found or no blogs available
+ *       500:
+ *         description: Server error
+ */
+router.get('/user/:userId', blogController.getBlogsByUser);
 
 module.exports = router;

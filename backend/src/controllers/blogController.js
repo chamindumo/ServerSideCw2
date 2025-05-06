@@ -3,6 +3,7 @@ const axios = require('axios');
 
 exports.createPost = async (req, res) => {
   const { title, content, country, visitDate } = req.body;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null; // Get the uploaded image path
 
   try {
     const postId = await BlogPostDAO.createPost({
@@ -11,6 +12,7 @@ exports.createPost = async (req, res) => {
       content,
       country,
       visitDate,
+      imagePath, // Save the image path
     });
     res.status(201).json({ message: 'Blog post created successfully', postId });
   } catch (err) {
@@ -22,6 +24,7 @@ exports.createPost = async (req, res) => {
 exports.updatePost = async (req, res) => {
   const { id } = req.params;
   const { title, content, country, visitDate } = req.body;
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null; // Get the uploaded image path
 
   try {
     const changes = await BlogPostDAO.updatePost({
@@ -31,6 +34,7 @@ exports.updatePost = async (req, res) => {
       content,
       country,
       visitDate,
+      imagePath, // Include the new image path
     });
     if (changes === 0) return res.status(404).json({ error: 'Blog post not found' });
     res.json({ message: 'Blog post updated successfully' });
@@ -58,7 +62,10 @@ exports.getAllPosts = async (req, res) => {
 
   try {
     const posts = await BlogPostDAO.getAllPosts(parseInt(limit), parseInt(offset), sortBy);
-    res.json(posts);
+    res.json(posts.map(post => ({
+      ...post,
+      image_path: post.image_path ? `http://localhost:3000${post.image_path}` : null, // Prefix the image path with the server URL
+    })));
   } catch (err) {
     console.error('Error fetching blog posts:', err);
     res.status(500).json({ error: 'Failed to fetch blog posts' });
@@ -89,9 +96,32 @@ exports.getPostById = async (req, res) => {
     const countryData = countryResponse.data[0];
     const flagUrl = countryData?.flags?.png || null;
 
-    res.json({ ...post, flagUrl }); // Include the flag URL in the response
+    res.json({
+      ...post,
+      flagUrl,
+      image_path: post.image_path ? `http://localhost:3000${post.image_path}` : null, // Prefix the image path with the server URL
+    });
   } catch (err) {
     console.error('Error fetching blog post:', err);
     res.status(500).json({ error: 'Failed to fetch blog post' });
+  }
+};
+
+exports.getBlogsByUser = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const blogs = await BlogPostDAO.getBlogsByUserId(userId);
+    if (blogs.length === 0) {
+      return res.status(404).json({ error: 'No blogs found for this user' });
+    }
+
+    res.json(blogs.map(blog => ({
+      ...blog,
+      image_path: blog.image_path ? `http://localhost:3000${blog.image_path}` : null, // Prefix the image path with the server URL
+    })));
+  } catch (err) {
+    console.error('Error fetching blogs by user:', err);
+    res.status(500).json({ error: 'Failed to fetch blogs by user' });
   }
 };
