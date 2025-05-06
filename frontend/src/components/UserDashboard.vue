@@ -1,24 +1,22 @@
 <template>
   <div class="dashboard">
-    <h1>User Dashboard</h1>
-    <div class="user-details" v-if="userDetails">
+    <h1 v-if="!editingPost">User Dashboard</h1>
+    <div class="user-details" v-if="userDetails && !editingPost">
       <h3>Welcome, {{ userDetails.firstname }} {{ userDetails.lastname }}!</h3>
       <p><strong>Email:</strong> {{ userDetails.email }}</p>
       <p><strong>User Id:</strong> {{ userDetails.id }}</p>
       <p><strong>Created At:</strong> {{ userDetails.created_at }}</p>
     </div>
-    
 
-    <div class="user-posts">
+    <div class="user-posts" v-if="!editingPost">
       <h2>Your Posts</h2>
-
       <div v-if="loadingPosts" class="loading">Loading your posts...</div>
       <div v-else-if="posts.length === 0" class="no-posts">You have not uploaded any posts yet.</div>
       <div v-else class="post-cards">
         <div v-for="post in posts" :key="post.id" class="post-card">
           <img v-if="post.image_path" :src="post.image_path" alt="Blog" class="post-image" />
           <h3>{{ post.title }}</h3>
-          <p>{{ post.content.slice(0, 100) }}...</p>
+          <p>{{ stripHtml(post.content).slice(0, 100) }}...</p>
           <div class="post-actions">
             <router-link :to="{ name: 'BlogDetails', params: { id: post.id } }" class="view-btn">View</router-link>
             <button @click="deletePost(post.id)" class="delete-btn">Delete</button>
@@ -37,7 +35,7 @@
         </div>
         <div>
           <label for="content">Content:</label>
-          <textarea id="content" v-model="editForm.content" required></textarea>
+          <ckeditor :editor="editor" v-model="editForm.content" :config="editorConfig" />
         </div>
         <div>
           <label for="country">Country:</label>
@@ -60,11 +58,32 @@
 
 <script>
 import axios from "axios";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import CKEditor from "@ckeditor/ckeditor5-vue2";
 
 export default {
   name: "UserDashboard",
+  components: {
+    ckeditor: CKEditor.component,
+  },
   data() {
     return {
+      editor: ClassicEditor,
+      editorConfig: {
+        toolbar: [
+          "heading",
+          "|",
+          "bold",
+          "italic",
+          "link",
+          "bulletedList",
+          "numberedList",
+          "|",
+          "blockQuote",
+          "undo",
+          "redo",
+        ],
+      },
       token: localStorage.getItem("userToken"),
       csrfToken: null,
       userDetails: null,
@@ -185,6 +204,11 @@ export default {
     cancelEdit() {
       this.editingPost = false;
       this.editForm = { id: null, title: "", content: "", country: "", visitDate: "", image: null };
+    },
+    stripHtml(html) {
+      const div = document.createElement("div");
+      div.innerHTML = html;
+      return div.textContent || div.innerText || "";
     },
   },
 };
