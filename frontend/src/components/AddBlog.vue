@@ -3,27 +3,27 @@
   <div class="add-blog">
     <h1>Add New Blog</h1>
     <form @submit.prevent="submitBlog">
-      <div>
+      <div class="form-group">
         <label for="title">Title:</label>
         <input type="text" id="title" v-model="title" required />
       </div>
-      <div>
+      <div >
         <label for="content">Content:</label>
         <div id="editor"></div>
       </div>
-      <div>
+      <div class="form-group">
         <label for="country">Country:</label>
         <input type="text" id="country" v-model="country" required />
       </div>
-      <div>
+      <div class="form-group">
         <label for="visitDate">Visit Date:</label>
         <input type="date" id="visitDate" v-model="visitDate" required />
       </div>
-      <div>
+      <div class="form-group">
         <label for="image">Image:</label>
         <input type="file" id="image" @change="handleImageUpload" accept="image/*" />
       </div>
-      <button type="submit">Submit</button>
+      <button type="submit" class="submit-btn">Submit</button>
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">{{ success }}</p>
     </form>
@@ -82,11 +82,9 @@ export default {
         formData.append("visitDate", this.visitDate);
         if (this.image) {
           formData.append("image", this.image); // Append the image file
-        } else {
-          console.warn("No image selected for upload."); // Log a warning if no image is selected
         }
 
-        const response = await api.post("/blog", formData, {
+        await api.post("/blog", formData, {
           headers: {
             Authorization: `Bearer ${token}`, // Include JWT token
             "Content-Type": "multipart/form-data", // Set content type for file upload
@@ -95,7 +93,6 @@ export default {
 
         this.success = "Blog added successfully!";
         this.error = null;
-        console.log("Response from server:", response.data); // Log the server response
         this.resetForm();
       } catch (err) {
         console.error("Error adding blog:", err);
@@ -119,20 +116,81 @@ export default {
 
 <style scoped>
 .add-blog {
-  max-width: 600px;
-  margin: 0 auto;
+  width: 900px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
+
+h1 {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.blog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #34495e;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="file"] {
+  width: 97.5%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
 #editor {
-  margin-top: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
   min-height: 200px;
+  padding: 10px;
+  font-size: 1rem;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
 }
+
+.submit-btn {
+  background-color: #42b983;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #369f6e;
+}
+
 .error {
   color: red;
+  font-weight: bold;
 }
+
 .success {
   color: green;
+  font-weight: bold;
 }
 </style>
