@@ -1,3 +1,4 @@
+// filepath: c:\Users\janit\OneDrive\Desktop\ServerSideCw2\frontend\src\components\AddBlog.vue
 <template>
   <div class="add-blog">
     <h1>Add New Blog</h1>
@@ -8,7 +9,7 @@
       </div>
       <div>
         <label for="content">Content:</label>
-        <textarea id="content" v-model="content" required></textarea>
+        <div id="editor"></div>
       </div>
       <div>
         <label for="country">Country:</label>
@@ -30,6 +31,7 @@
 </template>
 
 <script>
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import api from "../services/api";
 
 export default {
@@ -37,13 +39,34 @@ export default {
   data() {
     return {
       title: "",
-      content: "",
+      content: "", // Ensure this holds the HTML content from the editor
       country: "",
       visitDate: "",
       image: null, // Store the uploaded image
       error: null,
       success: null,
+      editorInstance: null,
     };
+  },
+  mounted() {
+    // Initialize CKEditor
+    ClassicEditor.create(document.querySelector("#editor"), {
+      toolbar: [
+        "bold", "italic", "underline", "link", "imageUpload", "bulletedList", "numberedList", "blockQuote",
+      ],
+    })
+      .then(editor => {
+        this.editorInstance = editor;
+      })
+      .catch(error => {
+        console.error("Error initializing CKEditor:", error);
+      });
+  },
+  beforeDestroy() {
+    // Destroy CKEditor instance
+    if (this.editorInstance) {
+      this.editorInstance.destroy();
+    }
   },
   methods: {
     handleImageUpload(event) {
@@ -54,14 +77,16 @@ export default {
         const token = localStorage.getItem("userToken"); // Retrieve JWT token
         const formData = new FormData();
         formData.append("title", this.title);
-        formData.append("content", this.content);
+        formData.append("content", this.editorInstance.getData()); // Get HTML content from CKEditor
         formData.append("country", this.country);
         formData.append("visitDate", this.visitDate);
         if (this.image) {
           formData.append("image", this.image); // Append the image file
+        } else {
+          console.warn("No image selected for upload."); // Log a warning if no image is selected
         }
 
-        await api.post("/blog", formData, {
+        const response = await api.post("/blog", formData, {
           headers: {
             Authorization: `Bearer ${token}`, // Include JWT token
             "Content-Type": "multipart/form-data", // Set content type for file upload
@@ -70,6 +95,7 @@ export default {
 
         this.success = "Blog added successfully!";
         this.error = null;
+        console.log("Response from server:", response.data); // Log the server response
         this.resetForm();
       } catch (err) {
         console.error("Error adding blog:", err);
@@ -83,6 +109,9 @@ export default {
       this.country = "";
       this.visitDate = "";
       this.image = null;
+      if (this.editorInstance) {
+        this.editorInstance.setData(""); // Reset CKEditor content
+      }
     },
   },
 };
@@ -93,6 +122,12 @@ export default {
   max-width: 600px;
   margin: 0 auto;
   text-align: center;
+}
+#editor {
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  min-height: 200px;
 }
 .error {
   color: red;

@@ -12,7 +12,7 @@
         <img :src="blog.image_path" alt="Blog Image" class="blog-image" />
       </div>
       <div class="blog-content">
-        <p>{{ blog.content }}</p>
+        <div v-html="sanitizedContent"></div>
         <p><strong>User ID:</strong> {{ blog.user_id }}</p>
         <p><strong>Country:</strong> {{ blog.country }}</p>
         <p v-if="blog.flagUrl">
@@ -48,6 +48,7 @@
 
 <script>
 import api from "../services/api";
+import DOMPurify from "dompurify";
 
 export default {
   name: "BlogDetails",
@@ -85,6 +86,11 @@ export default {
     } finally {
       this.loading = false;
     }
+  },
+  computed: {
+    sanitizedContent() {
+      return DOMPurify.sanitize(this.blog.content); // Sanitize HTML content
+    },
   },
   methods: {
     async likeBlog() {

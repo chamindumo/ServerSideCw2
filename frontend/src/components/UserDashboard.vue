@@ -16,11 +16,11 @@
       <div v-else-if="posts.length === 0" class="no-posts">You have not uploaded any posts yet.</div>
       <div v-else class="post-cards">
         <div v-for="post in posts" :key="post.id" class="post-card">
+          <img v-if="post.image_path" :src="post.image_path" alt="Blog" class="post-image" />
           <h3>{{ post.title }}</h3>
           <p>{{ post.content.slice(0, 100) }}...</p>
           <div class="post-actions">
             <router-link :to="{ name: 'BlogDetails', params: { id: post.id } }" class="view-btn">View</router-link>
-            <router-link :to="{ name: 'EditBlog', params: { id: post.id } }" class="edit-btn">Edit</router-link>
             <button @click="deletePost(post.id)" class="delete-btn">Delete</button>
             <button @click="editPost(post)" class="edit-btn">Edit Inline</button>
           </div>
@@ -245,6 +245,12 @@ pre {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
   text-align: left;
+}
+.post-image {
+  width: 400px;
+  height: 200px;
+  border-radius: 10px;
+  margin-bottom: 10px;
 }
 .post-actions {
   margin-top: 10px;

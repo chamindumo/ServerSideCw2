@@ -12,7 +12,7 @@
           </span>
         </div>
         <h2>{{ blog.title }}</h2>
-        <p>{{ blog.content.slice(0, 150) }}...</p>
+        <div v-html="blog.content.slice(0, 150) + '...'"></div>
         <router-link :to="{ name: 'BlogDetails', params: { id: blog.id } }" class="read-more">
           Read More
         </router-link>
@@ -54,12 +54,12 @@ export default {
         const response = await api.get("/blog", {
           params: { limit: this.limit, offset: this.offset },
         });
-        const newBlogs = response.data.map(blog => ({
-          ...blog,
-          imageUrl: blog.image_path
-            ? `http://localhost:3000${blog.image_path}`
-            : `C:/Users/janit/OneDrive/Desktop/ServerSideCw2/frontend/src/assets/no-image-icon-23485.png`, // Dummy image URL
-          categories: blog.categories || ["General"],
+       const newBlogs = response.data.map(post => ({
+          ...post,
+          imageUrl: post.image_path
+            ? post.image_path
+            : "https://via.placeholder.com/300x200?text=No+Image", // Dummy image URL
+          categories: post.categories || ["General"],
         }));
         if (newBlogs.length === 0) {
           this.allBlogsLoaded = true;

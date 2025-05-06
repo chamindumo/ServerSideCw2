@@ -3,8 +3,8 @@ const axios = require('axios');
 
 exports.createPost = async (req, res) => {
   const { title, content, country, visitDate } = req.body;
-  const imagePath = req.file ? `/uploads/${req.file.filename}` : null; // Get the uploaded image path
-
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null; // Ensure the uploaded image path is captured
+console.log('Image path:', imagePath); // Debugging line to check the image path
   try {
     const postId = await BlogPostDAO.createPost({
       userId: req.userId,
@@ -12,7 +12,7 @@ exports.createPost = async (req, res) => {
       content,
       country,
       visitDate,
-      imagePath, // Save the image path
+      imagePath, // Pass the image path to the DAO
     });
     res.status(201).json({ message: 'Blog post created successfully', postId });
   } catch (err) {

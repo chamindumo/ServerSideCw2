@@ -12,7 +12,7 @@
           </span>
         </div>
         <h2>{{ blog.title }}</h2>
-        <p>{{ blog.content.slice(0, 150) }}...</p>
+        <div v-html="blog.content.slice(0, 150) + '...'"></div>
         <router-link :to="{ name: 'BlogDetails', params: { id: blog.id } }" class="read-more">
           Read More
         </router-link>
