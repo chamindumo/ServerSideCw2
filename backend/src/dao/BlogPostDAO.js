@@ -62,12 +62,15 @@ class BlogPostDAO {
     });
   }
 
-  static async searchPosts(query, limit, offset, sortBy) {
-    const orderBy = sortBy === 'most_liked' ? 'likes DESC' : 'created_at DESC';
+  static async searchPosts(query) {
     return new Promise((resolve, reject) => {
       db.all(
-        `SELECT * FROM blog_posts WHERE country LIKE ? OR user_id IN (SELECT id FROM users WHERE user_id LIKE ?) ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
-        [`%${query}%`, `%${query}%`, limit, offset],
+        `SELECT blog_posts.*, 
+                (users.firstname || ' ' || users.lastname) AS posterName 
+         FROM blog_posts 
+         INNER JOIN users ON blog_posts.user_id = users.id 
+         WHERE blog_posts.country LIKE ? OR users.firstname LIKE ? OR users.lastname LIKE ?`,
+        [`%${query}%`, `%${query}%`, `%${query}%`],
         (err, rows) => {
           if (err) return reject(err);
           resolve(rows);
@@ -84,6 +87,19 @@ class BlogPostDAO {
         (err, rows) => {
           if (err) return reject(err);
           resolve(rows);
+        }
+      );
+    });
+  }
+
+  static async getLikesCount(userId) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT SUM(likes) AS totalLikes FROM blog_posts WHERE user_id = ?',
+        [userId],
+        (err, row) => {
+          if (err) return reject(err);
+          resolve(row.totalLikes || 0);
         }
       );
     });

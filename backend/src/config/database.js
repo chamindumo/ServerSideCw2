@@ -52,6 +52,12 @@ db.serialize(() => {
     }
   });
 
+  db.run(`ALTER TABLE users ADD COLUMN image_path TEXT DEFAULT '/uploads/1746546809052-no-image-icon-23485.png'`, (err) => {
+    if (err && !err.message.includes('duplicate column name')) {
+      console.error('Error adding image_path column:', err);
+    }
+  });
+
   // Create the csrf_tokens table
   db.run(`
     CREATE TABLE IF NOT EXISTS csrf_tokens (
@@ -96,22 +102,7 @@ db.serialize(() => {
     }
   });
 
-  // Update existing rows in the blog_posts table to set likes and dislikes to 0 if NULL
-  db.run(`UPDATE blog_posts SET likes = 0 WHERE likes IS NULL`, (err) => {
-    if (err) {
-      console.error('Error updating likes column:', err);
-    } else {
-      console.log('Likes column updated successfully.');
-    }
-  });
-
-  db.run(`UPDATE blog_posts SET dislikes = 0 WHERE dislikes IS NULL`, (err) => {
-    if (err) {
-      console.error('Error updating dislikes column:', err);
-    } else {
-      console.log('Dislikes column updated successfully.');
-    }
-  });
+  
 
   // Create the comments table
   db.run(`

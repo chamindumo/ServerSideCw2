@@ -1,14 +1,71 @@
 <template>
   <div class="dashboard">
     <h1 v-if="!editingPost">User Dashboard</h1>
-    <div class="user-details" v-if="userDetails && !editingPost">
-      <h3>Welcome, {{ userDetails.firstname }} {{ userDetails.lastname }}!</h3>
-      <p><strong>Email:</strong> {{ userDetails.email }}</p>
-      <p><strong>User Id:</strong> {{ userDetails.id }}</p>
-      <p><strong>Created At:</strong> {{ userDetails.created_at }}</p>
+
+    <!-- Profile Section -->
+    <div v-if="!editingPost && !editingAccount" class="user-profile">
+      <div v-if="!userDetails" class="loading">Loading your profile...</div>
+      <div v-else>
+        <img :src="'http://localhost:3000' + userDetails.image_path" alt="Profile" class="profile-image" />
+        <h3><strong></strong> {{ userDetails.firstname }} {{ userDetails.lastname }}</h3>
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ posts.length }}</span>
+            <span class="stat-label">posts</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ stats.followers }}</span>
+            <span class="stat-label">followers</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ stats.likes }}</span>
+            <span class="stat-label">likes</span>
+          </div>
+        </div>
+        <button @click="editingAccount = true">Edit Account</button>
+      </div>
     </div>
 
-    <div class="user-posts" v-if="!editingPost">
+    <!-- Edit Account Form -->
+    <div v-if="editingAccount" class="edit-post-form">
+      <h2>Edit Account</h2>
+      <form @submit.prevent="updateAccount">
+        <div class="form-group">
+          <label for="firstname">First Name:</label>
+          <input type="text" id="firstname" v-model="editForm.firstname" required />
+        </div>
+        <div class="form-group">
+          <label for="lastname">Last Name:</label>
+          <input type="text" id="lastname" v-model="editForm.lastname" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" v-model="editForm.email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password (leave blank to keep current):</label>
+          <input type="password" id="password" v-model="editForm.password" />
+        </div>
+        <div class="form-group">
+          <label for="image">Profile Image:</label>
+          <input type="file" id="image" @change="handleImageUpload" />
+        </div>
+        <div class="form-actions">
+
+        <button type="submit"  class="btn save-btn">Save Changes</button>
+        <button type="button" @click="cancelEdit" class="btn cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabs Section -->
+    <div v-if="!editingPost && !editingAccount" class="tabs">
+      <button :class="{ active: activeTab === 'posts' }" @click="activeTab = 'posts'">Your Posts</button>
+      <button :class="{ active: activeTab === 'followers' }" @click="activeTab = 'followers'">Your Followers</button>
+    </div>
+
+    <!-- Posts Tab -->
+    <div v-if="!editingPost && !editingAccount && activeTab === 'posts'" class="user-posts">
       <h2>Your Posts</h2>
       <div v-if="loadingPosts" class="loading">Loading your posts...</div>
       <div v-else-if="posts.length === 0" class="no-posts">You have not uploaded any posts yet.</div>
@@ -26,31 +83,49 @@
       </div>
     </div>
 
+    <!-- Followers Tab -->
+    <div v-if="!editingPost && !editingAccount && activeTab === 'followers'" class="user-followers">
+      <h2>Your Followers</h2>
+      <div v-if="loadingFollowers" class="loading">Loading your followers...</div>
+      <div v-else-if="followers.length === 0" class="no-followers">You have no followers yet.</div>
+      <div v-else class="follower-cards">
+        <div v-for="follower in followers" :key="follower.id" class="follower-card">
+          <img :src="'http://localhost:3000' + follower.image_path" alt="Profile" class="follower-image" />
+          <h3>{{ follower.name }}</h3>
+          <p>{{ follower.email }}</p>
+          <button @click="unfollowUser(follower.id)" class="unfollow-btn">Unfollow</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Post Form -->
     <div v-if="editingPost" class="edit-post-form">
       <h2>Edit Post</h2>
       <form @submit.prevent="submitEditPost">
-        <div>
+        <div class="form-group">
           <label for="title">Title:</label>
           <input type="text" id="title" v-model="editForm.title" required />
         </div>
-        <div>
+        <div class="form-group">
           <label for="content">Content:</label>
           <ckeditor :editor="editor" v-model="editForm.content" :config="editorConfig" />
         </div>
-        <div>
+        <div class="form-group">
           <label for="country">Country:</label>
           <input type="text" id="country" v-model="editForm.country" required />
         </div>
-        <div>
+        <div class="form-group">
           <label for="visitDate">Visit Date:</label>
           <input type="date" id="visitDate" v-model="editForm.visitDate" required />
         </div>
-        <div>
+        <div class="form-group">
           <label for="image">Image:</label>
           <input type="file" id="image" @change="handleImageUpload" />
         </div>
-        <button type="submit">Save Changes</button>
-        <button type="button" @click="cancelEdit">Cancel</button>
+        <div class="form-actions">
+          <button type="submit" class="btn save-btn">Save Changes</button>
+          <button type="button" @click="cancelEdit" class="btn cancel-btn">Cancel</button>
+        </div>
       </form>
     </div>
   </div>
@@ -68,6 +143,7 @@ export default {
   },
   data() {
     return {
+      activeTab: "posts", // Track the active tab
       editor: ClassicEditor,
       editorConfig: {
         toolbar: [
@@ -87,12 +163,13 @@ export default {
       token: localStorage.getItem("userToken"),
       csrfToken: null,
       userDetails: null,
-      response: null,
-      showCountryForm: false,
-      countryName: "",
+      stats: { followers: 0, likes: 0 }, // Store followers and likes count
       posts: [],
+      followers: [],
       loadingPosts: true,
+      loadingFollowers: true,
       editingPost: false,
+      editingAccount: false,
       editForm: {
         id: null,
         title: "",
@@ -100,6 +177,10 @@ export default {
         country: "",
         visitDate: "",
         image: null,
+        firstname: "",
+        lastname: "",
+        email: "",
+        password: "",
       },
     };
   },
@@ -120,7 +201,9 @@ export default {
       this.userDetails = userResponse;
       console.log("User Details:", this.userDetails);
 
+      await this.fetchUserStats(); // Fetch followers and likes count
       await this.fetchUserPosts();
+      await this.fetchFollowers();
     } catch (err) {
       console.error("Failed to fetch CSRF token or user details:", err);
       alert("Failed to fetch required data. Please try again.");
@@ -147,7 +230,15 @@ export default {
         throw err.response ? err.response.data : "An error occurred.";
       }
     },
-    
+    async fetchUserStats() {
+      try {
+        const statsResponse = await this.callApi(`/user/${this.userDetails.id}/stats`, "GET");
+        this.stats = statsResponse;
+      } catch (err) {
+        console.error("Error fetching user stats:", err);
+        alert("Failed to fetch user stats. Please try again.");
+      }
+    },
     async fetchUserPosts() {
       try {
         const postresponse = await this.callApi(`/blog/user/${this.userDetails.id}`, "GET");
@@ -156,6 +247,16 @@ export default {
         console.error("Error fetching user posts:", err);
       } finally {
         this.loadingPosts = false;
+      }
+    },
+    async fetchFollowers() {
+      try {
+        const followersResponse = await this.callApi(`/follow/${this.userDetails.id}/followers`, "GET");
+        this.followers = followersResponse;
+      } catch (err) {
+        console.error("Error fetching followers:", err);
+      } finally {
+        this.loadingFollowers = false;
       }
     },
     async deletePost(postId) {
@@ -168,6 +269,18 @@ export default {
       } catch (err) {
         console.error("Error deleting post:", err);
         alert("Failed to delete the post. Please try again.");
+      }
+    },
+    async unfollowUser(followerId) {
+      if (!confirm("Are you sure you want to unfollow this user?")) return;
+
+      try {
+        await this.callApi(`/follow/${followerId}/unfollow`, "DELETE");
+        this.followers = this.followers.filter(follower => follower.id !== followerId);
+        alert("User unfollowed successfully.");
+      } catch (err) {
+        console.error("Error unfollowing user:", err);
+        alert("Failed to unfollow the user. Please try again.");
       }
     },
     editPost(post) {
@@ -201,9 +314,36 @@ export default {
         alert("Failed to update the post. Please try again.");
       }
     },
+    async updateAccount() {
+      const formData = new FormData();
+      formData.append("firstname", this.editForm.firstname);
+      formData.append("lastname", this.editForm.lastname);
+      formData.append("email", this.editForm.email);
+      if (this.editForm.password) {
+        formData.append("password", this.editForm.password);
+      }
+      if (this.editForm.image) {
+        formData.append("image", this.editForm.image);
+      }
+
+      try {
+        await this.callApi("/user/update", "PUT", formData);
+        alert("Account updated successfully.");
+        this.editingAccount = false;
+        await this.fetchUserProfile();
+      } catch (err) {
+        console.error("Error updating account:", err);
+        alert("Failed to update account. Please try again.");
+      }
+    },
+    async fetchUserProfile() {
+      const userResponse = await this.callApi("/user/profile", "GET");
+      this.userDetails = userResponse;
+    },
     cancelEdit() {
       this.editingPost = false;
-      this.editForm = { id: null, title: "", content: "", country: "", visitDate: "", image: null };
+      this.editingAccount = false;
+      this.editForm = { id: null, title: "", content: "", country: "", visitDate: "", image: null, firstname: "", lastname: "", email: "", password: "" };
     },
     stripHtml(html) {
       const div = document.createElement("div");
@@ -230,6 +370,73 @@ h1 {
   color: #2c3e50;
   margin-bottom: 20px;
   font-weight: bold;
+}
+
+.user-profile {
+  margin-bottom: 30px;
+  text-align: middle;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 700px;
+}
+
+.user-profile img.profile-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 15px;
+}
+
+.user-profile p {
+  font-size: 1rem;
+  color: #34495e;
+  margin: 10px 0;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 20px 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #000;
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: #555;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 5px;
+  background-color: #f4f4f4;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.tabs button.active {
+  background-color: #42b983;
+  color: white;
 }
 
 .user-details {
@@ -365,6 +572,45 @@ h2 {
   color: #7f8c8d;
 }
 
+.user-followers {
+  margin-top: 30px;
+}
+
+.follower-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.follower-card {
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+}
+
+.follower-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.unfollow-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.unfollow-btn:hover {
+  background-color: #c0392b;
+}
+
 .edit-post-form {
   margin-top: 20px;
   padding: 20px;
@@ -374,19 +620,25 @@ h2 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.edit-post-form form div {
+.edit-post-form h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.form-group {
   margin-bottom: 15px;
 }
 
-.edit-post-form label {
+.form-group label {
   display: block;
-  font-weight: bold;
   margin-bottom: 5px;
+  font-weight: bold;
   color: #34495e;
 }
 
-.edit-post-form input,
-.edit-post-form textarea {
+.form-group input,
+.form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
@@ -394,27 +646,44 @@ h2 {
   font-size: 1rem;
 }
 
-.edit-post-form button {
-  margin-right: 10px;
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border: 1px solid #3498db;
+  box-shadow: 0 0 5px #3498db;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.btn {
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
   font-size: 1rem;
   font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.edit-post-form button[type="submit"] {
+.save-btn {
   background-color: #42b983;
   color: white;
 }
 
-.edit-post-form button[type="button"] {
+.save-btn:hover {
+  background-color: #369f6e;
+}
+
+.cancel-btn {
   background-color: #e74c3c;
   color: white;
 }
 
-.edit-post-form button:hover {
-  opacity: 0.9;
+.cancel-btn:hover {
+  background-color: #c0392b;
 }
 </style>

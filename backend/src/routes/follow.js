@@ -5,7 +5,7 @@ const { verifyToken } = require('../middleware/auth');
 
 // All routes require CSRF token validation
 router.use((req, res, next) => {
-  req.csrfToken();
+  req.csrfToken(); // CSRF token validation middleware
   next();
 });
 
@@ -121,5 +121,33 @@ router.get('/feed', verifyToken, followController.getFollowedPosts);
  *         description: Server error
  */
 router.get('/:id/status', verifyToken, followController.checkFollowStatus);
+
+/**
+ * @swagger
+ * /follow/{id}/followers:
+ *   get:
+ *     summary: Get the list of users following a specific user
+ *     tags: [Follow]
+ *     security:
+ *       - bearerAuth: []
+ *       - csrfAuth: [] 
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user to get followers for
+ *     responses:
+ *       200:
+ *         description: List of followers retrieved successfully
+ *       404:
+ *         description: User not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/followers', verifyToken, followController.getFollowers);
 
 module.exports = router;

@@ -64,3 +64,15 @@ exports.checkFollowStatus = async (req, res) => {
     res.status(500).json({ error: "Failed to check follow status" });
   }
 };
+
+exports.getFollowers = async (req, res) => {
+  const { id: userId } = req.params;
+
+  try {
+    const followers = await FollowDAO.getFollowers(userId);
+    res.json(followers);
+  } catch (err) {
+    console.error("Error fetching followers:", err);
+    res.status(500).json({ error: "Failed to fetch followers" });
+  }
+};

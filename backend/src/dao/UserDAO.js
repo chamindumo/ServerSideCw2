@@ -31,8 +31,8 @@ class UserDAO {
   static async createUser(user) {
     return new Promise((resolve, reject) => {
       db.run(
-        'INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)',
-        [user.firstname, user.lastname, user.email, user.password],
+        'INSERT INTO users (firstname, lastname, email, password, image_path) VALUES (?, ?, ?, ?, ?)',
+        [user.firstname, user.lastname, user.email, user.password, user.imagePath],
         function (err) {
           if (err) return reject(err);
           resolve(this.lastID);
@@ -46,6 +46,25 @@ class UserDAO {
       db.run(
         'UPDATE users SET username = ?, role = ?, plan = ?, api_key_limit = ? WHERE id = ?',
         [user.username, user.role, user.plan, user.apiKeyLimit, user.id],
+        function (err) {
+          if (err) return reject(err);
+          resolve(this.changes);
+        }
+      );
+    });
+  }
+
+  static async updateUserAccount(userId, updatedFields) {
+    const { firstname, lastname, email, password, imagePath } = updatedFields;
+
+    return new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE users 
+         SET firstname = ?, lastname = ?, email = ?, 
+             password = COALESCE(?, password), 
+             image_path = COALESCE(?, image_path) 
+         WHERE id = ?`,
+        [firstname, lastname, email, password, imagePath, userId],
         function (err) {
           if (err) return reject(err);
           resolve(this.changes);
@@ -84,6 +103,21 @@ class UserDAO {
         function (err) {
           if (err) return reject(err);
           resolve(this.lastID);
+        }
+      );
+    });
+  }
+
+  static async searchUsers(query) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT id, firstname, lastname, email, image_path 
+         FROM users 
+         WHERE firstname LIKE ? OR lastname LIKE ? OR email LIKE ?`,
+        [`%${query}%`, `%${query}%`, `%${query}%`],
+        (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
         }
       );
     });

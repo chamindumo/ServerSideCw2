@@ -183,44 +183,21 @@ router.get('/', (req, res, next) => {
  * @swagger
  * /blog/search:
  *   get:
- *     summary: Search blog posts
+ *     summary: Search for blog posts by country or poster's name
  *     tags: [Blog]
- *     security:
- *       - csrfAuth: []
  *     parameters:
  *       - in: query
  *         name: query
  *         schema:
  *           type: string
  *         description: Search query
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of posts to retrieve
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *         description: Number of posts to skip
- *       - in: query
- *         name: sortBy
- *         schema:
- *           type: string
- *           enum: [newest, most_liked]
- *         description: Sorting criteria
  *     responses:
  *       200:
  *         description: List of matching blog posts
- *       403:
- *         description: Invalid CSRF token
  *       500:
  *         description: Server error
  */
-router.get('/search', (req, res, next) => {
-  req.csrfToken(); // Validate CSRF token
-  next();
-}, blogController.searchPosts);
+router.get('/search', blogController.searchPosts);
 
 /**
  * @swagger

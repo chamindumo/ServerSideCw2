@@ -52,6 +52,38 @@ class FollowDAO {
       );
     });
   }
+
+  static async getFollowers(userId) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT users.id, 
+                (users.firstname || ' ' || users.lastname) AS name, 
+                users.email,
+                users.image_path 
+         FROM users 
+         INNER JOIN follows ON users.id = follows.following_id 
+         WHERE follows.follower_id = ?`,
+        [userId],
+        (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
+  static async getFollowersCount(userId) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT COUNT(*) AS count FROM follows WHERE follower_id = ?',
+        [userId],
+        (err, row) => {
+          if (err) return reject(err);
+          resolve(row.count);
+        }
+      );
+    });
+  }
 }
 
 module.exports = FollowDAO;

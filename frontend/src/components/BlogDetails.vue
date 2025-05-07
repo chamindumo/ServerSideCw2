@@ -22,10 +22,11 @@
           <p><strong>Likes:</strong> {{ blog.likes }}</p>
           <p><strong>Dislikes:</strong> {{ blog.dislikes }}</p>
         </div>
-        <div class="actions">
+        <div class="actions" v-if="isLoggedIn">
           <button @click="likeBlog" class="like-btn">Like</button>
           <button @click="dislikeBlog" class="dislike-btn">Dislike</button>
         </div>
+        <p v-else class="login-prompt">Log in to like or dislike this post.</p>
       </div>
 
       <div class="comments-section">
@@ -35,10 +36,11 @@
             <p><strong>{{ comment.username }}:</strong> {{ comment.content }}</p>
           </li>
         </ul>
-        <form @submit.prevent="addComment">
+        <form v-if="isLoggedIn" @submit.prevent="addComment">
           <textarea v-model="newComment" placeholder="Add a comment..." required></textarea>
           <button type="submit">Submit</button>
         </form>
+        <p v-else class="login-prompt">Log in to add a comment.</p>
       </div>
     </div>
   </div>
@@ -59,6 +61,7 @@ export default {
       loading: true,
       error: null,
       isFollowing: false,
+      isLoggedIn: !!localStorage.getItem("userToken"), // Check login status
     };
   },
   async mounted() {
@@ -72,12 +75,19 @@ export default {
       const commentsResponse = await api.get(`/comment/${this.id}`);
       this.comments = commentsResponse.data;
 
-      const followResponse = await api.get(`/follow/${this.blog.user_id}/status`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-        },
-      });
-      this.isFollowing = followResponse.data.isFollowing;
+      if (this.isLoggedIn) {
+        try {
+          const followResponse = await api.get(`/follow/${this.blog.user_id}/status`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+            },
+          });
+          this.isFollowing = followResponse.data.isFollowing;
+        } catch (err) {
+          console.warn("Unable to fetch follow status. Defaulting to not following.");
+          this.isFollowing = false;
+        }
+      }
     } catch (err) {
       console.error("Error fetching blog details or comments:", err);
       this.error = "Failed to load blog details or comments. Please try again.";
@@ -92,6 +102,7 @@ export default {
   },
   methods: {
     async likeBlog() {
+      if (!this.isLoggedIn) return;
       try {
         await api.post(`/comment/${this.id}/like`, {}, {
           headers: {
@@ -104,6 +115,7 @@ export default {
       }
     },
     async dislikeBlog() {
+      if (!this.isLoggedIn) return;
       try {
         await api.post(`/comment/${this.id}/dislike`, {}, {
           headers: {
@@ -116,6 +128,10 @@ export default {
       }
     },
     async followUser(userId) {
+      if (!this.isLoggedIn) {
+        alert("You need to log in or sign up to follow users.");
+        return;
+      }
       try {
         await api.post(`/follow/${userId}/follow`, {}, {
           headers: {
@@ -129,6 +145,7 @@ export default {
       }
     },
     async addComment() {
+      if (!this.isLoggedIn) return;
       try {
         await api.post(`/comment/${this.id}`, { content: this.newComment }, {
           headers: {
@@ -278,5 +295,11 @@ export default {
   text-align: center;
   font-size: 18px;
   color: #2c3e50;
+}
+
+.login-prompt {
+  color: #e74c3c;
+  font-weight: bold;
+  margin-top: 10px;
 }
 </style>

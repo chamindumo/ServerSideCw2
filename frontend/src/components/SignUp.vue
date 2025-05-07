@@ -1,7 +1,7 @@
 <template>
   <div class="signup">
     <h1>Sign Up</h1>
-    <form @submit.prevent="register">
+    <form @submit.prevent="register" enctype="multipart/form-data">
       <div>
         <label for="firstname">First Name:</label>
         <input type="text" id="firstname" v-model="firstname" required />
@@ -17,6 +17,10 @@
       <div>
         <label for="password">Password:</label>
         <input type="password" id="password" v-model="password" required />
+      </div>
+      <div>
+        <label for="image">Profile Image:</label>
+        <input type="file" id="image" @change="handleImageUpload" accept="image/*" />
       </div>
       <button type="submit">Sign Up</button>
     </form>
@@ -36,30 +40,35 @@ export default {
       lastname: "",
       email: "",
       password: "",
+      image: null,
       error: null,
       success: null,
     };
   },
   methods: {
+    handleImageUpload(event) {
+      this.image = event.target.files[0];
+    },
     async register() {
       try {
-        // Fetch CSRF token
         const csrfResponse = await axios.get("http://localhost:3000/auth/csrf-token", {
           withCredentials: true,
         });
         const csrfToken = csrfResponse.data.csrfToken;
 
-        const payload = {
-          firstname: this.firstname,
-          lastname: this.lastname,
-          email: this.email,
-          password: this.password,
-        };
+        const formData = new FormData();
+        formData.append("firstname", this.firstname);
+        formData.append("lastname", this.lastname);
+        formData.append("email", this.email);
+        formData.append("password", this.password);
+        if (this.image) {
+          formData.append("image", this.image);
+        }
 
-        // Include CSRF token in the headers
-        await axios.post("http://localhost:3000/user/register", payload, {
+        await axios.post("http://localhost:3000/user/register", formData, {
           headers: {
             "X-CSRF-Token": csrfToken,
+            "Content-Type": "multipart/form-data",
           },
           withCredentials: true,
         });
@@ -67,7 +76,6 @@ export default {
         this.success = "Registration successful! Redirecting to login...";
         this.error = null;
 
-        // Redirect to login page after a short delay
         setTimeout(() => {
           this.$router.push("/user/login");
         }, 2000);

@@ -73,14 +73,14 @@ exports.getAllPosts = async (req, res) => {
 };
 
 exports.searchPosts = async (req, res) => {
-  const { query, limit = 10, offset = 0, sortBy = 'newest' } = req.query;
+  const { query } = req.query;
 
   try {
-    const posts = await BlogPostDAO.searchPosts(query, parseInt(limit), parseInt(offset), sortBy);
+    const posts = await BlogPostDAO.searchPosts(query);
     res.json(posts);
   } catch (err) {
-    console.error('Error searching blog posts:', err);
-    res.status(500).json({ error: 'Failed to search blog posts' });
+    console.error("Error searching blog posts:", err);
+    res.status(500).json({ error: "Failed to search blog posts" });
   }
 };
 
