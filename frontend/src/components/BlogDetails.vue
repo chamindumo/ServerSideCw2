@@ -9,7 +9,7 @@
       <div class="blog-header">
         <img v-if="blog.posterImage" :src="blog.posterImage" alt="Poster Image" class="poster-image" />
         <div class="poster-details">
-          <p class="poster-name"><strong>Posted by:</strong> {{ blog.posterName }}</p>
+          <p class="poster-name"><strong></strong> {{ blog.posterName }}</p>
           <button v-if="!isFollowing" @click="followUser(blog.user_id)" class="follow-btn">
             <i class="fas fa-user-plus"></i> Follow
           </button>
@@ -29,15 +29,14 @@
           <img :src="blog.flagUrl" alt="Country flag" class="country-flag" />
         </p>
         <div class="likes-dislikes">
-          <p><strong>Likes:</strong> {{ blog.likes }}</p>
-          <p><strong>Dislikes:</strong> {{ blog.dislikes }}</p>
+          <p><strong>Likes:</strong> {{ blog.likes }} | <strong>Dislikes:</strong> {{ blog.dislikes }}</p>
         </div>
         <div class="actions" v-if="isLoggedIn">
           <button @click="likeBlog" class="like-btn">
-            <i class="fas fa-thumbs-up"></i> Like
+            <i class="fas fa-thumbs-up"></i> 
           </button>
           <button @click="dislikeBlog" class="dislike-btn">
-            <i class="fas fa-thumbs-down"></i> Dislike
+            <i class="fas fa-thumbs-down"></i> 
           </button>
         </div>
         <p v-else class="login-prompt">Log in to like or dislike this post.</p>
@@ -46,16 +45,45 @@
         <h2>Comments</h2>
         <ul>
           <li v-for="comment in comments" :key="comment.id">
-            <p><strong>{{ comment.username }}:</strong> {{ comment.content }}</p>
+            <p><strong>{{ comment.username }}</strong> </p>
+            <p>{{ comment.content }}</p>
           </li>
         </ul>
         <form v-if="isLoggedIn" @submit.prevent="addComment">
-          <textarea v-model="newComment" placeholder="Add a comment..." required></textarea>
-          <button type="submit">Submit</button>
+          <textarea v-model="newComment" placeholder="Add a comment..." required class="comment-textarea"></textarea>
+          <button type="submit" class="btn btn-primary">Submit</button>
         </form>
         <p v-else class="login-prompt">Log in to add a comment.</p>
       </div>
+      <div class="author-blogs" v-if="authorBlogs.length > 0">
+        <h2>More Blogs by {{ blog.posterName }}</h2>
+        <div class="blog-cards">
+          <div v-for="authorBlog in authorBlogs" :key="authorBlog.id" class="blog-card">
+  <a
+    :href="$router.resolve({ name: 'BlogDetails', params: { id: authorBlog.id } }).href"
+    @click.prevent="navigateToBlog(authorBlog.id)"
+    class="blog-link"
+  >
+    <img :src="authorBlog.image_path || fallbackImage" alt="Blog Image" class="blog-thumbnail" />
+    <h3>{{ authorBlog.title }}</h3>
+    <p>
+      <strong>
+        <i class="fas fa-thumbs-up"></i> 
+      </strong> {{ authorBlog.likes }} &nbsp;&nbsp;
+      <strong>
+        <i class="fas fa-thumbs-down"></i> 
+      </strong> {{ authorBlog.dislikes }}
+    </p>
+    <p><strong>Posted on:</strong> {{ authorBlog.created_at }}</p>
+    <p><strong>Country:</strong> {{ authorBlog.country }}</p>
+  </a>
+</div>
+        </div>
+      </div>
     </div>
+    <button v-show="showBackToTop" @click="scrollToTop" class="btn back-to-top">
+      <i class="fas fa-arrow-up"></i>
+    </button>
   </div>
 </template>
 
@@ -75,6 +103,9 @@ export default {
       error: null,
       isFollowing: false,
       isLoggedIn: !!localStorage.getItem("userToken"),
+      showBackToTop: false,
+      authorBlogs: [],
+      fallbackImage: "https://via.placeholder.com/300x200?text=No+Image",
     };
   },
   async mounted() {
@@ -99,12 +130,19 @@ export default {
           this.isFollowing = false;
         }
       }
+      // Fetch other blogs by the same author
+      const authorBlogsResponse = await api.get(`/blog/user/${this.blog.user_id}`);
+      this.authorBlogs = authorBlogsResponse.data.filter((b) => b.id !== this.blog.id);
     } catch (err) {
       console.error("Error fetching blog details or comments:", err);
       this.error = "Failed to load blog details or comments. Please try again.";
     } finally {
       this.loading = false;
     }
+    window.addEventListener("scroll", this.handleScroll);
+  },
+  beforeDestroy() {
+    window.removeEventListener("scroll", this.handleScroll);
   },
   computed: {
     sanitizedContent() {
@@ -174,6 +212,17 @@ export default {
         console.error("Error adding comment:", err);
       }
     },
+    handleScroll() {
+      this.showBackToTop = window.scrollY > 300;
+    },
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    navigateToBlog(blogId) {
+  this.$router.push({ name: "BlogDetails", params: { id: blogId } }).then(() => {
+    window.location.reload(); // Refresh the page
+  });
+},
   },
 };
 </script>
@@ -339,6 +388,15 @@ export default {
 .comments-section button:hover {
   background-color: #369f6e;
 }
+.comment-textarea {
+  width: 100%;
+  max-width: 950px;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
 .error {
   color: red;
   text-align: center;
@@ -420,5 +478,102 @@ export default {
 .sanitized-content table th {
   background-color: #f4f4f4;
   font-weight: bold;
+}
+.btn {
+  padding: 10px 15px 10px 15px;
+  padding-left: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: rgb(238, 232, 232);
+  gap: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background-color: rgb(18, 17, 17);
+
+}
+
+.btn-primary {
+  background-color: #42b983;
+}
+
+.btn-primary:hover {
+  background-color: #369f6e;
+}
+
+.back-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-to-top:hover {
+  background-color: #369f6e;
+}
+
+.author-blogs {
+  margin-top: 40px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.author-blogs h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.blog-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.blog-card {
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.blog-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.blog-thumbnail {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.blog-card h3 {
+  font-size: 16px;
+  color: #2c3e50;
+  margin: 10px 0;
+  text-align: center;
 }
 </style>

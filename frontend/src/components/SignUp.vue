@@ -21,8 +21,9 @@
       <div>
         <label for="image">Profile Image:</label>
         <input type="file" id="image" @change="handleImageUpload" accept="image/*" />
+        <img v-if="imagePreview" :src="imagePreview" alt="Image Preview" class="image-preview" />
       </div>
-      <button type="submit">Sign Up</button>
+      <button type="submit" class="btn btn-primary">Sign Up</button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="success" class="success">{{ success }}</p>
@@ -41,6 +42,7 @@ export default {
       email: "",
       password: "",
       image: null,
+      imagePreview: null,
       error: null,
       success: null,
     };
@@ -48,6 +50,7 @@ export default {
   methods: {
     handleImageUpload(event) {
       this.image = event.target.files[0];
+      this.imagePreview = URL.createObjectURL(this.image);
     },
     async register() {
       try {
@@ -157,5 +160,14 @@ export default {
   margin-top: 15px;
   color: green;
   font-weight: bold;
+}
+
+.image-preview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
 }
 </style>

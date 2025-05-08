@@ -91,11 +91,21 @@ export default {
       this.fetchUserProfileImage();
     },
     logout() {
+      const countriesData = localStorage.getItem("countries");
+      localStorage.clear();
+      if (countriesData) {
+        localStorage.setItem("countries", countriesData);
+      }
       localStorage.removeItem("userToken");
       localStorage.removeItem("csrfToken");
-      localStorage.removeItem("userProfileImage");
       this.isLoggedIn = false;
-      this.$router.push("/");
+
+      // Handle redundant navigation gracefully
+      this.$router.push("/").catch((err) => {
+        if (err.name !== "NavigationDuplicated") {
+          console.error(err);
+        }
+      });
     },
     async searchPosts() {
       if (!this.searchQuery.trim()) {

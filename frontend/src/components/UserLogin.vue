@@ -31,8 +31,12 @@ export default {
   methods: {
     async login() {
       try {
-        // Clear existing storage and cookies
+        // Clear existing storage and cookies, except for countries data
+        const countriesData = localStorage.getItem("countries");
         localStorage.clear();
+        if (countriesData) {
+          localStorage.setItem("countries", countriesData);
+        }
         sessionStorage.clear();
         document.cookie.split(";").forEach((cookie) => {
           const name = cookie.split("=")[0].trim();
@@ -63,22 +67,28 @@ export default {
         // Store user token in local storage
         localStorage.setItem("userToken", response.data.token);
 
-        // Fetch all countries and store them in local storage
-        const countriesResponse = await axios.get("http://localhost:3000/countries", {
-          headers: {
-            "x-csrf-token": csrfToken, // Add the CSRF token to the request header
-          },
-        });
-        const countries = countriesResponse.data.map((country) => ({
-          name: country.name.common
-        }));
-        localStorage.setItem("countries", JSON.stringify(countries));
+        // Check if countries data is already in local storage
+        if (!countriesData) {
+          const countriesResponse = await axios.get("http://localhost:3000/countries", {
+            headers: {
+              "x-csrf-token": csrfToken,
+            },
+          });
+          const countries = countriesResponse.data.map((country) => ({
+            name: country.name.common,
+          }));
+          localStorage.setItem("countries", JSON.stringify(countries));
+        }
 
         // Notify the parent component about the login state
         this.$emit("login-success");
 
         // Redirect to the dashboard or home page
-        this.$router.push("/");
+        this.$router.push("/").catch((err) => {
+          if (err.name !== "NavigationDuplicated") {
+            console.error(err);
+          }
+        });
       } catch (err) {
         console.error("Error during login:", err);
         this.error = "Invalid credentials or server error. Please try again.";

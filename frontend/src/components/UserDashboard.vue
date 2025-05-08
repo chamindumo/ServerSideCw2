@@ -120,8 +120,10 @@
           <input type="text" id="title" v-model="editForm.title" required />
         </div>
         <div class="form-group">
-          <label for="content">Content:</label>
-          <ckeditor :editor="editor" v-model="editForm.content" :config="editorConfig" />
+          <div class = 'form-group'>
+        <label for="content">Content:</label>
+      </div>
+                <ckeditor :editor="editor" v-model="editForm.content" :config="editorConfig" />
         </div>
         <div class="form-group">
           <label for="country">Country:</label>

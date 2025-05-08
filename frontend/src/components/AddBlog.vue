@@ -8,7 +8,9 @@
         <input type="text" id="title" v-model="title" required />
       </div>
       <div>
+        <div class = 'form-group'>
         <label for="content">Content:</label>
+      </div>
         <div id="editor"></div>
       </div>
       <div class="form-group">
@@ -28,8 +30,9 @@
       <div class="form-group">
         <label for="image">Image:</label>
         <input type="file" id="image" @change="handleImageUpload" accept="image/*" />
+        <img v-if="imagePreview" :src="imagePreview" alt="Image Preview" class="image-preview" />
       </div>
-      <button type="submit" class="submit-btn">Submit</button>
+      <button type="submit" class="btn btn-primary submit-btn">Submit</button>
       <p v-if="error" class="error">{{ error }}</p>
       <p v-if="success" class="success">{{ success }}</p>
     </form>
@@ -50,6 +53,7 @@ export default {
       selectedCountry: "", // Selected country name
       visitDate: "",
       image: null,
+      imagePreview: null,
       error: null,
       success: null,
       editorInstance: null,
@@ -95,6 +99,7 @@ export default {
   methods: {
     handleImageUpload(event) {
       this.image = event.target.files[0];
+      this.imagePreview = URL.createObjectURL(this.image);
     },
     async submitBlog() {
       try {
@@ -130,6 +135,7 @@ export default {
       this.selectedCountry = "";
       this.visitDate = "";
       this.image = null;
+      this.imagePreview = null;
       if (this.editorInstance) {
         this.editorInstance.setData("");
       }
@@ -191,7 +197,8 @@ select {
 .submit-btn {
   background-color: #42b983;
   color: white;
-  padding: 10px 20px;
+  padding: 10px 20px 10px 20px;
+  margin-top: 20px;
   border: none;
   border-radius: 5px;
   font-size: 1rem;
@@ -224,5 +231,14 @@ select {
   margin-top: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+}
+
+.image-preview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
 }
 </style>
