@@ -522,7 +522,7 @@ export default {
 }
 
 .back-to-top:hover {
-  background-color: #369f6e;
+  background-color: #969796;
 }
 
 .author-blogs {
