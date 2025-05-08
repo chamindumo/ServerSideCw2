@@ -1,37 +1,42 @@
 <template>
   <div id="app">
     <nav class="navbar">
-      <ul>
+      <div class="site-name">
+        <router-link to="/" class="site-link">TravelTales</router-link>
+      </div>
+      <div class="search-container">
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Search posts..."
+          @input="searchPosts"
+          class="search-input"
+        />
+        <ul v-if="searchResults.length > 0" class="dropdown-results">
+          <li
+            v-for="result in searchResults"
+            :key="result.id"
+            @click="redirectToPost(result.id)"
+            class="dropdown-item"
+          >
+            <img :src="result.image_path || fallbackImage" alt="Post Image" class="result-image" />
+            <span>{{ result.title }}</span>
+          </li>
+        </ul>
+      </div>
+      <ul class="nav-items">
         <li><router-link to="/" class="nav-link">Home</router-link></li>
         <li><router-link to="/follow/feed" class="nav-link">Follow Feed</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/user/signup" class="nav-link">Sign Up</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/user/login" class="nav-link">Login</router-link></li>
-        <li v-if="isLoggedIn" class="dropdown">
-          <span class="nav-link">User</span>
+        <li v-if="isLoggedIn" class="profile-dropdown">
+          <div class="profile-container">
+            <img :src="userProfileImage || fallbackImage" alt="Profile" class="profile-image" />
+          </div>
           <ul class="dropdown-menu">
             <li><router-link to="/user/dashboard" class="dropdown-item">Dashboard</router-link></li>
             <li><router-link to="/blogs/add" class="dropdown-item">Add Blog</router-link></li>
             <li><button @click="logout" class="dropdown-item">Logout</button></li>
-          </ul>
-        </li>
-        <li class="search-dropdown">
-          <input
-            type="text"
-            v-model="searchQuery"
-            placeholder="Search posts..."
-            @input="searchPosts"
-            class="search-input"
-          />
-          <ul v-if="searchResults.length > 0" class="dropdown-results">
-            <li
-              v-for="result in searchResults"
-              :key="result.id"
-              @click="redirectToPost(result.id)"
-              class="dropdown-item"
-            >
-              <img :src="result.image_path" alt="Post Image" class="result-image" />
-              <span>{{ result.title }}</span>
-            </li>
           </ul>
         </li>
       </ul>
@@ -41,30 +46,56 @@
 </template>
 
 <script>
-
 export default {
   name: "App",
   data() {
     return {
-      isLoggedIn: !!localStorage.getItem("userToken") && this.checkUserData(), // Check if user data exists
+      isLoggedIn: !!localStorage.getItem("userToken") && this.checkUserData(),
       searchQuery: "",
       searchResults: [],
+      userProfileImage: localStorage.getItem("userProfileImage") || null,
+      fallbackImage: "https://via.placeholder.com/50x50?text=No+Image",
     };
   },
   methods: {
+    async fetchUserProfileImage() {
+      try {
+        const response = await fetch("http://localhost:3000/user/profile", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+          },
+        });
+        const user = await response.json();
+        if (user.image_path) {
+          this.userProfileImage = `http://localhost:3000${user.image_path}`;
+          localStorage.setItem("userProfileImage", this.userProfileImage);
+        } else {
+          this.userProfileImage = this.fallbackImage;
+        }
+      } catch (err) {
+        console.error("Error fetching user profile image:", err);
+        this.userProfileImage = this.fallbackImage;
+      }
+    },
     checkUserData() {
-      // Add logic to verify if user data exists
       const userToken = localStorage.getItem("userToken");
-      return !!userToken; // Return true if token exists, false otherwise
+      if (!userToken) {
+        console.warn("No user token found. Login failed.");
+        return false;
+      }
+      this.fetchUserProfileImage();
+      return true;
     },
     handleLoginSuccess() {
-      this.isLoggedIn = true; // Update the login state
+      this.isLoggedIn = true;
+      this.fetchUserProfileImage();
     },
     logout() {
-      localStorage.removeItem("userToken"); // Remove the JWT token
-      localStorage.removeItem("csrfToken"); // Remove the CSRF token
-      this.isLoggedIn = false; // Update the login state
-      this.$router.push("/"); // Redirect to the home page
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("csrfToken");
+      localStorage.removeItem("userProfileImage");
+      this.isLoggedIn = false;
+      this.$router.push("/");
     },
     async searchPosts() {
       if (!this.searchQuery.trim()) {
@@ -79,16 +110,16 @@ export default {
           title: post.title,
           image_path: post.image_path
             ? `http://localhost:3000${post.image_path}`
-            : "https://via.placeholder.com/50x50?text=No+Image",
+            : this.fallbackImage,
         }));
       } catch (err) {
         console.error("Error fetching search results:", err);
       }
     },
     redirectToPost(postId) {
-      this.searchQuery = ""; // Clear the search query
-      this.searchResults = []; // Clear the search results
-      this.$router.push({ name: "BlogDetails", params: { id: postId } }); // Navigate to the BlogDetails route
+      this.searchQuery = "";
+      this.searchResults = [];
+      this.$router.push({ name: "BlogDetails", params: { id: postId } });
     },
   },
 };
@@ -109,18 +140,68 @@ body {
 }
 
 .navbar {
-  background-color: #2c3e50;
+  background-color: #000000;
   padding: 10px 20px;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.navbar ul {
+.site-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+}
+
+.site-link {
+  text-decoration: none;
+  color: white;
+}
+
+.site-link:hover {
+  color: #42b983;
+}
+
+.search-container {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.search-input {
+  width: 50%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.dropdown-results {
+  position: absolute;
+  top: 100%;
+  left: 25%;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 50%;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.nav-items {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   gap: 20px;
+  align-items: center;
 }
 
 .navbar ul li {
@@ -137,81 +218,55 @@ body {
 }
 
 .navbar ul li .nav-link:hover {
-  background-color: #34495e;
+  background-color: #787070;
+}
+
+.profile-dropdown {
+  position: relative;
+}
+
+.profile-container {
+  background-color: white;
+  padding: 5px;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.profile-dropdown:hover .dropdown-menu {
+  display: block;
 }
 
 .dropdown-menu {
   display: none;
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   background-color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   list-style: none;
   padding: 10px 0;
   margin: 0;
-}
-
-.dropdown:hover .dropdown-menu {
-  display: block;
+  z-index: 1000;
 }
 
 .dropdown-item {
   padding: 10px 20px;
   text-decoration: none;
-  color: #2c3e50;
+  color: #000000;
   display: block;
 }
 
 .dropdown-item:hover {
   background-color: #ecf0f1;
-}
-
-.search-dropdown {
-  position: relative;
-}
-
-.search-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.dropdown-results {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  width: 100%; /* Full width of the input */
-  z-index: 1000;
-  display: flex;
-  flex-direction: column; /* Ensure items are stacked vertically */
-  max-height: 300px; /* Set a maximum height for the dropdown */
-  overflow-y: auto; /* Enable vertical scrolling */
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  border-bottom: 1px solid #ddd; /* Add a separator between items */
-}
-
-.dropdown-item:last-child {
-  border-bottom: none; /* Remove the border for the last item */
-}
-
-.dropdown-item:hover {
-  background-color: #f4f4f4;
 }
 
 .result-image {
@@ -222,7 +277,6 @@ body {
   margin-right: 10px;
 }
 
-/* Add a custom scrollbar style */
 .dropdown-results::-webkit-scrollbar {
   width: 8px;
 }

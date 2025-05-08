@@ -3,10 +3,20 @@
     <div v-if="loading" class="loading">Loading blog details...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="blog-container">
+      <!-- Blog Header with User Details -->
+      <h1 class="blog-title">{{ blog.title }}</h1>
+
       <div class="blog-header">
-        <h1>{{ blog.title }}</h1>
-        <button v-if="!isFollowing" @click="followUser(blog.user_id)" class="follow-btn">Follow</button>
-        <p v-else class="followed-text">You are following this user</p>
+        <img v-if="blog.posterImage" :src="blog.posterImage" alt="Poster Image" class="poster-image" />
+        <div class="poster-details">
+          <p class="poster-name"><strong>Posted by:</strong> {{ blog.posterName }}</p>
+          <button v-if="!isFollowing" @click="followUser(blog.user_id)" class="follow-btn">
+            <i class="fas fa-user-plus"></i> Follow
+          </button>
+          <p v-else class="followed-text">
+            <i class="fas fa-check-circle"></i> Following
+          </p>
+        </div>
       </div>
       <div v-if="blog.image_path" class="blog-image-container">
         <img :src="blog.image_path" alt="Blog Image" class="blog-image" />
@@ -23,12 +33,15 @@
           <p><strong>Dislikes:</strong> {{ blog.dislikes }}</p>
         </div>
         <div class="actions" v-if="isLoggedIn">
-          <button @click="likeBlog" class="like-btn">Like</button>
-          <button @click="dislikeBlog" class="dislike-btn">Dislike</button>
+          <button @click="likeBlog" class="like-btn">
+            <i class="fas fa-thumbs-up"></i> Like
+          </button>
+          <button @click="dislikeBlog" class="dislike-btn">
+            <i class="fas fa-thumbs-down"></i> Dislike
+          </button>
         </div>
         <p v-else class="login-prompt">Log in to like or dislike this post.</p>
       </div>
-
       <div class="comments-section">
         <h2>Comments</h2>
         <ul>
@@ -61,7 +74,7 @@ export default {
       loading: true,
       error: null,
       isFollowing: false,
-      isLoggedIn: !!localStorage.getItem("userToken"), // Check login status
+      isLoggedIn: !!localStorage.getItem("userToken"),
     };
   },
   async mounted() {
@@ -71,10 +84,8 @@ export default {
         ...response.data,
         image_path: response.data.image_path ? response.data.image_path : null,
       };
-
       const commentsResponse = await api.get(`/comment/${this.id}`);
       this.comments = commentsResponse.data;
-
       if (this.isLoggedIn) {
         try {
           const followResponse = await api.get(`/follow/${this.blog.user_id}/status`, {
@@ -97,8 +108,8 @@ export default {
   },
   computed: {
     sanitizedContent() {
-      const sanitized = DOMPurify.sanitize(this.blog.content); // Sanitize HTML content
-      return `<div class="sanitized-content">${sanitized}</div>`; // Wrap in a styled container
+      const sanitized = DOMPurify.sanitize(this.blog.content);
+      return `<div class="sanitized-content">${sanitized}</div>`;
     },
   },
   methods: {
@@ -148,12 +159,16 @@ export default {
     async addComment() {
       if (!this.isLoggedIn) return;
       try {
-        await api.post(`/comment/${this.id}`, { content: this.newComment }, {
+        const response = await api.post(`/comment/${this.id}`, { content: this.newComment }, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("userToken")}`,
           },
         });
-        this.comments.push({ username: "You", content: this.newComment });
+        this.comments.push({
+          id: response.data.comment.id,
+          username: response.data.comment.username,
+          content: this.newComment,
+        });
         this.newComment = "";
       } catch (err) {
         console.error("Error adding comment:", err);
@@ -176,16 +191,33 @@ export default {
 }
 .blog-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 10px;
 }
-.blog-header h1 {
-  font-size: 24px;
+.poster-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.poster-details {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.poster-name {
+  margin: 0;
+  font-size: 14px;
   color: #333;
 }
-.follow-btn {
-  background-color: #42b983;
+.follow-btn,
+.like-btn,
+.dislike-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #2c3e50;
   color: white;
   border: none;
   padding: 10px 15px;
@@ -194,12 +226,34 @@ export default {
   font-size: 14px;
   transition: background-color 0.3s ease;
 }
+.follow-btn {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
 .follow-btn:hover {
   background-color: #369f6e;
 }
+.like-btn:hover {
+  background-color: #34495e;
+}
+.dislike-btn:hover {
+  background-color: #34495e;
+}
 .followed-text {
   color: #42b983;
+  font-size: 12px;
   font-weight: bold;
+}
+.blog-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 10px;
+  color: #333;
 }
 .blog-content {
   margin-top: 20px;
@@ -234,24 +288,12 @@ export default {
   display: flex;
   gap: 20px;
   margin-top: 10px;
+  margin-bottom: 20px;
 }
 .actions {
   margin-top: 10px;
-}
-.like-btn,
-.dislike-btn {
-  background-color: #2c3e50;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-.like-btn:hover,
-.dislike-btn:hover {
-  background-color: #34495e;
+  display: flex;
+  gap: 20px;
 }
 .comments-section {
   margin-top: 30px;
@@ -313,7 +355,6 @@ export default {
   margin-top: 10px;
   text-align: center;
 }
-
 .sanitized-content {
   word-wrap: break-word;
   color: #444;
@@ -321,39 +362,32 @@ export default {
   font-size: 16px;
   margin-top: 20px;
 }
-
 .sanitized-content p {
   margin-bottom: 15px;
 }
-
 .sanitized-content a {
   color: #42b983;
   text-decoration: underline;
 }
-
 .sanitized-content a:hover {
   text-decoration: none;
 }
-
 .sanitized-content ul {
   list-style: disc;
   margin-left: 20px;
 }
-
 .sanitized-content ol {
   list-style: decimal;
   margin-left: 20px;
 }
-
 .sanitized-content img {
-  max-width: 100%; /* Ensure images fit within the container */
+  max-width: 100%;
   height: auto;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin: 10px 0;
-  display: block; /* Prevent inline image overflow issues */
+  display: block;
 }
-
 .sanitized-content blockquote {
   margin: 20px 0;
   padding: 10px 20px;
@@ -362,7 +396,6 @@ export default {
   color: #555;
   font-style: italic;
 }
-
 .sanitized-content h1,
 .sanitized-content h2,
 .sanitized-content h3,
@@ -373,20 +406,17 @@ export default {
   font-weight: bold;
   color: #333;
 }
-
 .sanitized-content table {
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
 }
-
 .sanitized-content table th,
 .sanitized-content table td {
   border: 1px solid #ddd;
   padding: 10px;
   text-align: left;
 }
-
 .sanitized-content table th {
   background-color: #f4f4f4;
   font-weight: bold;

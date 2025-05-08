@@ -1,10 +1,11 @@
 const BlogPostDAO = require('../dao/BlogPostDAO');
+const UserDAO = require('../dao/UserDAO'); // Import UserDAO
 const axios = require('axios');
 
 exports.createPost = async (req, res) => {
   const { title, content, country, visitDate } = req.body;
   const imagePath = req.file ? `/uploads/${req.file.filename}` : null; // Ensure the uploaded image path is captured
-console.log('Image path:', imagePath); // Debugging line to check the image path
+  console.log('Image path:', imagePath); // Debugging line to check the image path
   try {
     const postId = await BlogPostDAO.createPost({
       userId: req.userId,
@@ -96,10 +97,16 @@ exports.getPostById = async (req, res) => {
     const countryData = countryResponse.data[0];
     const flagUrl = countryData?.flags?.png || null;
 
+    // Fetch the user's full name and image
+    const user = await UserDAO.getUserById(post.user_id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
     res.json({
       ...post,
       flagUrl,
       image_path: post.image_path ? `http://localhost:3000${post.image_path}` : null, // Prefix the image path with the server URL
+      posterName: `${user.firstname} ${user.lastname}`,
+      posterImage: user.image_path ? `http://localhost:3000${user.image_path}` : null,
     });
   } catch (err) {
     console.error('Error fetching blog post:', err);

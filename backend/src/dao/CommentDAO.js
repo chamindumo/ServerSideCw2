@@ -17,7 +17,12 @@ class CommentDAO {
   static async getCommentsByPost(postId) {
     return new Promise((resolve, reject) => {
       db.all(
-        'SELECT comments.*, comments.user_id FROM comments WHERE comments.post_id = ? ORDER BY comments.created_at DESC',
+        `SELECT comments.*, 
+                users.firstname || ' ' || users.lastname AS username 
+         FROM comments 
+         INNER JOIN users ON comments.user_id = users.id 
+         WHERE comments.post_id = ? 
+         ORDER BY comments.created_at DESC`,
         [postId],
         (err, rows) => {
           if (err) return reject(err);

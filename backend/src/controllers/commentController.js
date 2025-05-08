@@ -1,4 +1,5 @@
 const CommentDAO = require('../dao/CommentDAO');
+const UserDAO = require('../dao/UserDAO');
 
 exports.addComment = async (req, res) => {
   const { postId } = req.params;
@@ -6,7 +7,15 @@ exports.addComment = async (req, res) => {
 
   try {
     const commentId = await CommentDAO.addComment(postId, req.userId, content);
-    res.status(201).json({ message: 'Comment added successfully', commentId });
+    const user = await UserDAO.getUserById(req.userId); // Fetch the user's name
+    res.status(201).json({
+      message: 'Comment added successfully',
+      comment: {
+        id: commentId,
+        username: `${user.firstname} ${user.lastname}`,
+        content,
+      },
+    });
   } catch (err) {
     console.error('Error adding comment:', err);
     res.status(500).json({ error: 'Failed to add comment' });
