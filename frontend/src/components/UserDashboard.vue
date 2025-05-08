@@ -18,6 +18,10 @@
             <span class="stat-label">followers</span>
           </div>
           <div class="stat-item">
+            <span class="stat-value">{{ followings.length }}</span>
+            <span class="stat-label">following</span>
+          </div>
+          <div class="stat-item">
             <span class="stat-value">{{ stats.likes }}</span>
             <span class="stat-label">likes</span>
           </div>
@@ -321,6 +325,7 @@ export default {
       try {
         const followingsResponse = await this.callApi(`/follow/${this.userDetails.id}/followings`, "GET");
         this.followings = followingsResponse;
+        this.stats.followingCount = followingsResponse.length; // Update following count
       } catch (err) {
         console.error("Error fetching followings:", err);
         alert("Failed to fetch followings. Please try again.");
@@ -433,6 +438,8 @@ export default {
           alert("User unfollowed successfully.");
           this.followers = this.followers.filter(follower => follower.id !== userId); // Remove from followers list
         }
+        window.location.reload(); // Reload the page after the action
+
       } catch (err) {
         console.error("Error toggling follow status:", err);
         alert("Failed to update follow status. Please try again.");
