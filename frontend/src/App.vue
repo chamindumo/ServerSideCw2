@@ -6,7 +6,6 @@
         <li><router-link to="/follow/feed" class="nav-link">Follow Feed</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/user/signup" class="nav-link">Sign Up</router-link></li>
         <li v-if="!isLoggedIn"><router-link to="/user/login" class="nav-link">Login</router-link></li>
-        <li v-if="isLoggedIn"><router-link to="/blogs/add" class="nav-link">Add Blog</router-link></li>
         <li v-if="isLoggedIn" class="dropdown">
           <span class="nav-link">User</span>
           <ul class="dropdown-menu">
@@ -42,6 +41,7 @@
 </template>
 
 <script>
+
 export default {
   name: "App",
   data() {
@@ -86,9 +86,9 @@ export default {
       }
     },
     redirectToPost(postId) {
-      this.searchQuery = "";
-      this.searchResults = [];
-      this.$router.push({ name: "BlogDetails", params: { id: postId } });
+      this.searchQuery = ""; // Clear the search query
+      this.searchResults = []; // Clear the search results
+      this.$router.push({ name: "BlogDetails", params: { id: postId } }); // Navigate to the BlogDetails route
     },
   },
 };

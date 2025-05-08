@@ -31,6 +31,7 @@ export default {
   methods: {
     async login() {
       try {
+        // Clear existing storage and cookies
         localStorage.clear();
         sessionStorage.clear();
         document.cookie.split(";").forEach((cookie) => {
@@ -38,11 +39,13 @@ export default {
           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
         });
 
+        // Fetch CSRF token
         const csrfResponse = await axios.get("http://localhost:3000/auth/csrf-token", {
           withCredentials: true,
         });
         const csrfToken = csrfResponse.data.csrfToken;
 
+        // Perform login
         const response = await axios.post(
           "http://localhost:3000/user/login",
           {
@@ -57,13 +60,27 @@ export default {
           }
         );
 
+        // Store user token in local storage
         localStorage.setItem("userToken", response.data.token);
 
-        // Notify the parent component (App.vue) about the login state
+        // Fetch all countries and store them in local storage
+        const countriesResponse = await axios.get("http://localhost:3000/countries", {
+          headers: {
+            "x-csrf-token": csrfToken, // Add the CSRF token to the request header
+          },
+        });
+        const countries = countriesResponse.data.map((country) => ({
+          name: country.name.common
+        }));
+        localStorage.setItem("countries", JSON.stringify(countries));
+
+        // Notify the parent component about the login state
         this.$emit("login-success");
 
+        // Redirect to the dashboard or home page
         this.$router.push("/");
       } catch (err) {
+        console.error("Error during login:", err);
         this.error = "Invalid credentials or server error. Please try again.";
       }
     },

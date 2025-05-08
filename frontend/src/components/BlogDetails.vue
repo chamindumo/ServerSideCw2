@@ -12,7 +12,7 @@
         <img :src="blog.image_path" alt="Blog Image" class="blog-image" />
       </div>
       <div class="blog-content">
-        <div v-html="sanitizedContent"></div>
+        <div v-html="sanitizedContent" class="sanitized-content"></div>
         <p><strong>Country:</strong> {{ blog.country }}</p>
         <p v-if="blog.flagUrl">
           <strong>Flag:</strong>
@@ -97,7 +97,8 @@ export default {
   },
   computed: {
     sanitizedContent() {
-      return DOMPurify.sanitize(this.blog.content); // Sanitize HTML content
+      const sanitized = DOMPurify.sanitize(this.blog.content); // Sanitize HTML content
+      return `<div class="sanitized-content">${sanitized}</div>`; // Wrap in a styled container
     },
   },
   methods: {
@@ -164,20 +165,25 @@ export default {
 
 <style scoped>
 .blog-details {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 20px auto;
   padding: 20px;
-  background: #fff;
+  background: #f9f9f9;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
 }
-
 .blog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
 }
-
+.blog-header h1 {
+  font-size: 24px;
+  color: #333;
+}
 .follow-btn {
   background-color: #42b983;
   color: white;
@@ -186,47 +192,52 @@ export default {
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.3s ease;
 }
-
 .follow-btn:hover {
   background-color: #369f6e;
 }
-
 .followed-text {
   color: #42b983;
   font-weight: bold;
 }
-
 .blog-content {
   margin-top: 20px;
+  color: #555;
 }
-
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 10px 0;
+  display: block;
+}
 .blog-image-container {
   text-align: center;
   margin-bottom: 20px;
 }
-
 .blog-image {
   max-width: 100%;
   height: auto;
   border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
-
 .country-flag {
   width: 100px;
   height: auto;
   margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
-
 .likes-dislikes {
   display: flex;
   gap: 20px;
+  margin-top: 10px;
 }
-
 .actions {
   margin-top: 10px;
 }
-
 .like-btn,
 .dislike-btn {
   background-color: #2c3e50;
@@ -236,42 +247,42 @@ export default {
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  margin-right: 10px;
+  transition: background-color 0.3s ease;
 }
-
-.like-btn:hover {
-  background-color: #34495e;
-}
-
+.like-btn:hover,
 .dislike-btn:hover {
   background-color: #34495e;
 }
-
 .comments-section {
   margin-top: 30px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .comments-section h2 {
   margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
 }
-
 .comments-section ul {
   list-style: none;
   padding: 0;
 }
-
 .comments-section li {
   margin-bottom: 10px;
+  padding: 10px;
+  background: #f4f4f4;
+  border-radius: 5px;
 }
-
 .comments-section textarea {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 14px;
 }
-
 .comments-section button {
   margin-top: 10px;
   padding: 10px 15px;
@@ -280,26 +291,104 @@ export default {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
 }
-
 .comments-section button:hover {
   background-color: #369f6e;
 }
-
 .error {
   color: red;
   text-align: center;
+  font-size: 16px;
 }
-
 .loading {
   text-align: center;
   font-size: 18px;
   color: #2c3e50;
 }
-
 .login-prompt {
   color: #e74c3c;
   font-weight: bold;
   margin-top: 10px;
+  text-align: center;
+}
+
+.sanitized-content {
+  word-wrap: break-word;
+  color: #444;
+  line-height: 1.8;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.sanitized-content p {
+  margin-bottom: 15px;
+}
+
+.sanitized-content a {
+  color: #42b983;
+  text-decoration: underline;
+}
+
+.sanitized-content a:hover {
+  text-decoration: none;
+}
+
+.sanitized-content ul {
+  list-style: disc;
+  margin-left: 20px;
+}
+
+.sanitized-content ol {
+  list-style: decimal;
+  margin-left: 20px;
+}
+
+.sanitized-content img {
+  max-width: 100%; /* Ensure images fit within the container */
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 10px 0;
+  display: block; /* Prevent inline image overflow issues */
+}
+
+.sanitized-content blockquote {
+  margin: 20px 0;
+  padding: 10px 20px;
+  background: #f9f9f9;
+  border-left: 5px solid #42b983;
+  color: #555;
+  font-style: italic;
+}
+
+.sanitized-content h1,
+.sanitized-content h2,
+.sanitized-content h3,
+.sanitized-content h4,
+.sanitized-content h5,
+.sanitized-content h6 {
+  margin: 20px 0 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.sanitized-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.sanitized-content table th,
+.sanitized-content table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.sanitized-content table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
 }
 </style>

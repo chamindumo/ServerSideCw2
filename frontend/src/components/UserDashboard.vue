@@ -71,9 +71,22 @@
       <div v-else-if="posts.length === 0" class="no-posts">You have not uploaded any posts yet.</div>
       <div v-else class="post-cards">
         <div v-for="post in posts" :key="post.id" class="post-card">
-          <img v-if="post.image_path" :src="post.image_path" alt="Blog" class="post-image" />
-          <h3>{{ post.title }}</h3>
-          <p>{{ stripHtml(post.content).slice(0, 100) }}...</p>
+          <div class="post-image-container">
+            <img
+              v-if="post.image_path"
+              :src= post.image_path
+              alt="Blog Image"
+              class="post-image"
+            />
+            <img
+              v-else
+              src="https://via.placeholder.com/300x200?text=No+Image"
+              alt="No Image"
+              class="post-image"
+            />
+          </div>
+          <h3 class="post-title">{{ post.title }}</h3>
+          <p class="post-snippet">{{ stripHtml(post.content).slice(0, 100) }}...</p>
           <div class="post-actions">
             <router-link :to="{ name: 'BlogDetails', params: { id: post.id } }" class="view-btn">View</router-link>
             <button @click="deletePost(post.id)" class="delete-btn">Delete</button>
@@ -112,7 +125,12 @@
         </div>
         <div class="form-group">
           <label for="country">Country:</label>
-          <input type="text" id="country" v-model="editForm.country" required />
+          <select id="country" v-model="editForm.country" required>
+            <option value="" disabled>Select a country</option>
+            <option v-for="country in countries" :key="country" :value="country">
+              {{ country }}
+            </option>
+          </select>
         </div>
         <div class="form-group">
           <label for="visitDate">Visit Date:</label>
@@ -182,6 +200,7 @@ export default {
         email: "",
         password: "",
       },
+      countries: [], // Store the list of countries
     };
   },
   async mounted() {
@@ -190,6 +209,7 @@ export default {
       this.$router.push("/user/login");
       return;
     }
+    
 
     try {
       const csrfResponse = await axios.get("http://localhost:3000/auth/csrf-token", {
@@ -200,6 +220,10 @@ export default {
       const userResponse = await this.callApi("/user/profile", "GET");
       this.userDetails = userResponse;
       console.log("User Details:", this.userDetails);
+
+      // Load countries from local storage
+      const storedCountries = JSON.parse(localStorage.getItem("countries")) || [];
+      this.countries = storedCountries.map((country) => country.name); // Extract only country names
 
       await this.fetchUserStats(); // Fetch followers and likes count
       await this.fetchUserPosts();
@@ -491,12 +515,18 @@ h2 {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-.post-image {
+.post-image-container {
   width: 100%;
   height: 200px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 10px;
-  margin-bottom: 15px;
 }
 
 .post-card h3 {

@@ -7,14 +7,20 @@
         <label for="title">Title:</label>
         <input type="text" id="title" v-model="title" required />
       </div>
-      <div >
+      <div>
         <label for="content">Content:</label>
         <div id="editor"></div>
       </div>
       <div class="form-group">
         <label for="country">Country:</label>
-        <input type="text" id="country" v-model="country" required />
+        <select id="country" v-model="selectedCountry" required>
+          <option value="" disabled>Select a country</option>
+          <option v-for="country in countries" :key="country.name" :value="country.name">
+            {{ country.name }}
+          </option>
+        </select>
       </div>
+    
       <div class="form-group">
         <label for="visitDate">Visit Date:</label>
         <input type="date" id="visitDate" v-model="visitDate" required />
@@ -39,56 +45,74 @@ export default {
   data() {
     return {
       title: "",
-      content: "", // Ensure this holds the HTML content from the editor
-      country: "",
+      content: "",
+      countries: [], // Store the list of countries
+      selectedCountry: "", // Selected country name
       visitDate: "",
-      image: null, // Store the uploaded image
+      image: null,
       error: null,
       success: null,
       editorInstance: null,
     };
   },
   mounted() {
-    // Initialize CKEditor
     ClassicEditor.create(document.querySelector("#editor"), {
       toolbar: [
-        "bold", "italic", "underline", "link", "imageUpload", "bulletedList", "numberedList", "blockQuote",
+        "bold",
+        "italic",
+        "underline",
+        "link",
+        "imageUpload",
+        "bulletedList",
+        "numberedList",
+        "blockQuote",
       ],
     })
-      .then(editor => {
+      .then((editor) => {
         this.editorInstance = editor;
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error initializing CKEditor:", error);
       });
+
+    // Load countries from local storage
+    const storedCountries = JSON.parse(localStorage.getItem("countries")) || [];
+    this.countries = storedCountries;
+  },
+  watch: {
+    selectedCountry(newCountry) {
+      // Update selected country details when a new country is selected
+      this.selectedCountryDetails = this.countries.find(
+        (country) => country.name === newCountry
+      );
+    },
   },
   beforeDestroy() {
-    // Destroy CKEditor instance
     if (this.editorInstance) {
       this.editorInstance.destroy();
     }
   },
   methods: {
     handleImageUpload(event) {
-      this.image = event.target.files[0]; // Store the selected file
+      this.image = event.target.files[0];
     },
     async submitBlog() {
       try {
-        const token = localStorage.getItem("userToken"); // Retrieve JWT token
+        const token = localStorage.getItem("userToken");
         const formData = new FormData();
         formData.append("title", this.title);
-        formData.append("content", this.editorInstance.getData()); // Get HTML content from CKEditor
-        formData.append("country", this.country);
+        formData.append("content", this.editorInstance.getData());
+        formData.append("country", this.selectedCountry);
         formData.append("visitDate", this.visitDate);
         if (this.image) {
-          formData.append("image", this.image); // Append the image file
+          formData.append("image", this.image);
         }
 
         await api.post("/blog", formData, {
           headers: {
-            Authorization: `Bearer ${token}`, // Include JWT token
-            "Content-Type": "multipart/form-data", // Set content type for file upload
+            Authorization: `Bearer ${token}`,
           },
+          body: formData,
         });
 
         this.success = "Blog added successfully!";
@@ -96,18 +120,18 @@ export default {
         this.resetForm();
       } catch (err) {
         console.error("Error adding blog:", err);
-        this.error = err.response?.data?.error || "Failed to add blog. Please try again.";
+        this.error = "Failed to add blog. Please try again.";
         this.success = null;
       }
     },
     resetForm() {
       this.title = "";
       this.content = "";
-      this.country = "";
+      this.selectedCountry = "";
       this.visitDate = "";
       this.image = null;
       if (this.editorInstance) {
-        this.editorInstance.setData(""); // Reset CKEditor content
+        this.editorInstance.setData("");
       }
     },
   },
@@ -131,12 +155,6 @@ h1 {
   margin-bottom: 20px;
 }
 
-.blog-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -151,7 +169,8 @@ label {
 
 input[type="text"],
 input[type="date"],
-input[type="file"] {
+input[type="file"],
+select {
   width: 97.5%;
   padding: 10px;
   border: 1px solid #ccc;
@@ -192,5 +211,18 @@ input[type="file"] {
 .success {
   color: green;
   font-weight: bold;
+}
+
+.country-details {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.country-flag {
+  width: 100px;
+  height: auto;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 </style>
