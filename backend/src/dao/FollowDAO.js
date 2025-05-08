@@ -72,6 +72,25 @@ class FollowDAO {
     });
   }
 
+  static async getFollowings(userId) {
+    return new Promise((resolve, reject) => {
+      db.all(
+        `SELECT users.id, 
+                (users.firstname || ' ' || users.lastname) AS name, 
+                users.email,
+                users.image_path 
+         FROM users 
+         INNER JOIN follows ON users.id = follows.follower_id 
+         WHERE follows.following_id = ?`,
+        [userId],
+        (err, rows) => {
+          if (err) return reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
   static async getFollowersCount(userId) {
     return new Promise((resolve, reject) => {
       db.get(

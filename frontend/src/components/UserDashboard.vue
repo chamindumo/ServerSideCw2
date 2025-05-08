@@ -62,6 +62,7 @@
     <div v-if="!editingPost && !editingAccount" class="tabs">
       <button :class="{ active: activeTab === 'posts' }" @click="activeTab = 'posts'">Your Posts</button>
       <button :class="{ active: activeTab === 'followers' }" @click="activeTab = 'followers'">Your Followers</button>
+      <button :class="{ active: activeTab === 'followings' }" @click="activeTab = 'followings'">Your Followings</button>
     </div>
 
     <!-- Posts Tab -->
@@ -107,6 +108,34 @@
           <h3>{{ follower.name }}</h3>
           <p>{{ follower.email }}</p>
           <button @click="unfollowUser(follower.id)" class="unfollow-btn">Unfollow</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Followings Tab -->
+    <div v-if="!editingPost && !editingAccount && activeTab === 'followings'" class="user-followings">
+      <h2>Your Followings</h2>
+      <div v-if="loadingFollowings" class="loading">Loading your followings...</div>
+      <div v-else-if="followings.length === 0" class="no-followings">You are not following anyone yet.</div>
+      <div v-else class="following-cards">
+        <div v-for="following in followings" :key="following.id" class="following-card">
+          <img :src="'http://localhost:3000' + following.image_path" alt="Profile" class="following-image" />
+          <h3>{{ following.name }}</h3>
+          <p>{{ following.email }}</p>
+          <button
+            v-if="isFollower(following.id)"
+            @click="toggleFollow(following.id, false)"
+            class="unfollow-btn"
+          >
+            Unfollow
+          </button>
+          <button
+            v-else
+            @click="toggleFollow(following.id, true)"
+            class="follow-btn"
+          >
+            Follow
+          </button>
         </div>
       </div>
     </div>
@@ -186,8 +215,10 @@ export default {
       stats: { followers: 0, likes: 0 }, // Store followers and likes count
       posts: [],
       followers: [],
+      followings: [], // Store the list of followings
       loadingPosts: true,
       loadingFollowers: true,
+      loadingFollowings: true, // Loading state for followings
       editingPost: false,
       editingAccount: false,
       editForm: {
@@ -230,6 +261,7 @@ export default {
       await this.fetchUserStats(); // Fetch followers and likes count
       await this.fetchUserPosts();
       await this.fetchFollowers();
+      await this.fetchFollowings(); // Fetch followings
     } catch (err) {
       console.error("Failed to fetch CSRF token or user details:", err);
       alert("Failed to fetch required data. Please try again.");
@@ -283,6 +315,17 @@ export default {
         console.error("Error fetching followers:", err);
       } finally {
         this.loadingFollowers = false;
+      }
+    },
+    async fetchFollowings() {
+      try {
+        const followingsResponse = await this.callApi(`/follow/${this.userDetails.id}/followings`, "GET");
+        this.followings = followingsResponse;
+      } catch (err) {
+        console.error("Error fetching followings:", err);
+        alert("Failed to fetch followings. Please try again.");
+      } finally {
+        this.loadingFollowings = false;
       }
     },
     async deletePost(postId) {
@@ -375,6 +418,25 @@ export default {
       const div = document.createElement("div");
       div.innerHTML = html;
       return div.textContent || div.innerText || "";
+    },
+    isFollower(userId) {
+      return this.followers.some(follower => follower.id === userId);
+    },
+    async toggleFollow(userId, follow) {
+      try {
+        if (follow) {
+          await this.callApi(`/follow/${userId}/follow`, "POST");
+          alert("User followed successfully.");
+          this.followers.push(this.followings.find(f => f.id === userId)); // Add to followers list
+        } else {
+          await this.callApi(`/follow/${userId}/unfollow`, "DELETE");
+          alert("User unfollowed successfully.");
+          this.followers = this.followers.filter(follower => follower.id !== userId); // Remove from followers list
+        }
+      } catch (err) {
+        console.error("Error toggling follow status:", err);
+        alert("Failed to update follow status. Please try again.");
+      }
     },
   },
 };
@@ -641,6 +703,45 @@ h2 {
 
 .unfollow-btn:hover {
   background-color: #c0392b;
+}
+
+.follow-btn {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.follow-btn:hover {
+  background-color: #369f6e;
+}
+
+.user-followings {
+  margin-top: 30px;
+}
+
+.following-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.following-card {
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+}
+
+.following-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 10px;
 }
 
 .edit-post-form {

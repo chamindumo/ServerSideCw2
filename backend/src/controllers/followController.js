@@ -76,3 +76,15 @@ exports.getFollowers = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch followers" });
   }
 };
+
+exports.getFollowings = async (req, res) => {
+  const { id: userId } = req.params;
+
+  try {
+    const followings = await FollowDAO.getFollowings(userId);
+    res.json(followings);
+  } catch (err) {
+    console.error("Error fetching followings:", err);
+    res.status(500).json({ error: "Failed to fetch followings" });
+  }
+};

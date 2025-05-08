@@ -150,4 +150,32 @@ router.get('/:id/status', verifyToken, followController.checkFollowStatus);
  */
 router.get('/:id/followers', verifyToken, followController.getFollowers);
 
+/**
+ * @swagger
+ * /follow/{id}/followings:
+ *   get:
+ *     summary: Get the list of users followed by a specific user
+ *     tags: [Follow]
+ *     security:
+ *       - bearerAuth: []
+ *       - csrfAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user to get followings for
+ *     responses:
+ *       200:
+ *         description: List of followings retrieved successfully
+ *       404:
+ *         description: User not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/followings', verifyToken, followController.getFollowings);
+
 module.exports = router;
