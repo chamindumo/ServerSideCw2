@@ -7,7 +7,6 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const authRoutes = require('./src/routes/auth');
 const countryRoutes = require('./src/routes/countries');
-const adminRoutes = require('./src/routes/admin');
 const userRoutes = require('./src/routes/user');
 const blogRoutes = require('./src/routes/blog'); // Blog post routes
 const followRoutes = require('./src/routes/follow'); // User following routes
