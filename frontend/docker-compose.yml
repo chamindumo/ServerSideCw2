@@ -4,8 +4,10 @@ services:
   frontend:
     build:
       context: .
-    image: frontend-app
+    image: cw2serversidefrontend-app
     ports:
       - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     # Comment out restart for debugging
     # restart: unless-stopped
