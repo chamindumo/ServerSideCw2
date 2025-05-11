@@ -3,10 +3,11 @@ const db = require('../config/database');
 class BlogPostDAO {
   static async createPost(post) {
     return new Promise((resolve, reject) => {
+      const createdAt = new Date().toISOString(); // Get local time in ISO format
       db.run(
-        `INSERT INTO blog_posts (user_id, title, content, country, visit_date, likes, dislikes, image_path) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [post.userId, post.title, post.content, post.country, post.visitDate, 0, 0, post.imagePath], // Include imagePath
+        `INSERT INTO blog_posts (user_id, title, content, country, visit_date, likes, dislikes, image_path, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [post.userId, post.title, post.content, post.country, post.visitDate, 0, 0, post.imagePath, createdAt],
         function (err) {
           if (err) return reject(err);
           resolve(this.lastID);

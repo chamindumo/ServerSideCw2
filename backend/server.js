@@ -16,7 +16,6 @@ const SQLiteStore = require('connect-sqlite3')(session); // Use SQLite for sessi
 const db = require('./src/config/database'); // Import the database connection
 const csrfService = require('./src/services/csrfService');
 const cron = require('node-cron');
-const { renewApiKeyLimits } = require('./src/services/renewService');
 const path = require('path'); // Add path module
 
 const app = express();

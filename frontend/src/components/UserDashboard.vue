@@ -258,6 +258,11 @@ export default {
       this.userDetails = userResponse;
       console.log("User Details:", this.userDetails);
 
+      // Pre-fill edit form with user details
+      this.editForm.firstname = this.userDetails.firstname;
+      this.editForm.lastname = this.userDetails.lastname;
+      this.editForm.email = this.userDetails.email;
+
       // Load countries from local storage
       const storedCountries = JSON.parse(localStorage.getItem("countries")) || [];
       this.countries = storedCountries.map((country) => country.name); // Extract only country names
@@ -752,6 +757,8 @@ h2 {
 }
 
 .edit-post-form {
+  width: 700px;
+  margin: 0 auto;  
   margin-top: 20px;
   padding: 20px;
   border: 1px solid #ddd;
@@ -768,6 +775,10 @@ h2 {
 
 .form-group {
   margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 670px;
 }
 
 .form-group label {

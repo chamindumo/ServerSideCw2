@@ -1,6 +1,13 @@
 <template>
   <div class="blog-list">
     <h1>All Blogs</h1>
+    <div class="sort-options">
+      <label for="sort">Sort by:</label>
+      <select id="sort" v-model="sortOption" @change="sortBlogs">
+        <option value="newest">Newest</option>
+        <option value="mostLikes">Most Likes</option>
+      </select>
+    </div>
     <div class="blog-cards">
       <div v-for="blog in blogs" :key="blog.id" class="blog-card">
         <router-link :to="{ name: 'BlogDetails', params: { id: blog.id } }">
@@ -36,6 +43,7 @@ export default {
       limit: 10,
       offset: 0,
       allBlogsLoaded: false,
+      sortOption: "newest", // New property for sorting
     };
   },
   async mounted() {
@@ -52,9 +60,9 @@ export default {
       this.error = null;
       try {
         const response = await api.get("/blog", {
-          params: { limit: this.limit, offset: this.offset },
+          params: { limit: this.limit, offset: this.offset, sortBy: this.sortOption },
         });
-       const newBlogs = response.data.map(post => ({
+        const newBlogs = response.data.map(post => ({
           ...post,
           imageUrl: post.image_path
             ? post.image_path
@@ -82,6 +90,14 @@ export default {
       if (scrollTop + windowHeight >= documentHeight - 100) {
         this.fetchBlogs();
       }
+    },
+    sortBlogs() {
+      if (this.sortOption === "newest") {
+        this.blogs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      } else if (this.sortOption === "mostLikes") {
+        this.blogs.sort((a, b) => b.likes - a.likes);
+      }
+    
     },
   },
 };
@@ -163,5 +179,23 @@ export default {
 .error {
   text-align: center;
   color: red;
+}
+
+.sort-options {
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.sort-options label {
+  margin-right: 10px;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.sort-options select {
+  padding: 5px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 </style>

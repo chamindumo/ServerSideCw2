@@ -1,7 +1,11 @@
 <template>
   <div class="blog-list">
     <h1>Followed Blogs</h1>
-    <div class="blog-cards">
+    <div v-if="!isLoggedIn" class="not-logged-in">
+      <p>You need to log in to view followed blogs.</p>
+      <router-link to="/user/login" class="login-button">Go to Login</router-link>
+    </div>
+    <div v-else class="blog-cards">
       <div v-for="blog in posts" :key="blog.id" class="blog-card">
         <router-link :to="{ name: 'BlogDetails', params: { id: blog.id } }">
           <img :src="blog.imageUrl" alt="Blog Image" class="blog-image" />
@@ -36,16 +40,26 @@ export default {
       limit: 10,
       offset: 0,
       allPostsLoaded: false,
+      isLoggedIn: false, // New property to track login status
     };
   },
   async mounted() {
-    await this.fetchPosts();
-    window.addEventListener("scroll", this.handleScroll);
+    this.checkLoginStatus();
+    if (this.isLoggedIn) {
+      await this.fetchPosts();
+      window.addEventListener("scroll", this.handleScroll);
+    }
   },
   beforeDestroy() {
-    window.removeEventListener("scroll", this.handleScroll);
+    if (this.isLoggedIn) {
+      window.removeEventListener("scroll", this.handleScroll);
+    }
   },
   methods: {
+    checkLoginStatus() {
+      const token = localStorage.getItem("userToken");
+      this.isLoggedIn = !!token; // Check if token exists
+    },
     async fetchPosts() {
       if (this.loading || this.allPostsLoaded) return;
       this.loading = true;
@@ -180,5 +194,29 @@ export default {
 .error {
   text-align: center;
   color: red;
+}
+
+.not-logged-in {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 18px;
+  color: #2c3e50;
+
+}
+
+.login-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 14px;
+  align-items: center;
+}
+
+.login-button:hover {
+  background-color: #2980b9;
 }
 </style>
