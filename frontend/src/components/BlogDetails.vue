@@ -10,10 +10,15 @@
         <img v-if="blog.posterImage" :src="blog.posterImage" alt="Poster Image" class="poster-image" />
         <div class="poster-details">
           <p class="poster-name"><strong></strong> {{ blog.posterName }}</p>
-          <button v-if="!isFollowing" @click="followUser(blog.user_id)" class="follow-btn">
+          <!-- Hide follow button if user is the author -->
+          <button
+            v-if="isLoggedIn && userId !== blog.user_id && !isFollowing"
+            @click="followUser(blog.user_id)"
+            class="follow-btn"
+          >
             <i class="fas fa-user-plus"></i> Follow
           </button>
-          <p v-else class="followed-text">
+          <p v-else-if="isLoggedIn && userId !== blog.user_id && isFollowing" class="followed-text">
             <i class="fas fa-check-circle"></i> Following
           </p>
         </div>
@@ -117,6 +122,7 @@ export default {
       authorBlogs: [],
       fallbackImage: "https://via.placeholder.com/300x200?text=No+Image",
       userReaction: null, // 1 for like, 0 for dislike, null for no reaction
+      userId: null, // Add this to store logged-in user's id
     };
   },
   async mounted() {
@@ -133,6 +139,14 @@ export default {
 
       if (this.isLoggedIn) {
         try {
+          // Get logged-in user id if logged in
+          const userProfile = await api.get("/user/profile", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+            },
+          });
+          this.userId = userProfile.data.id;
+
           // Fetch follow status
           const followResponse = await api.get(`/follow/${this.blog.user_id}/status`, {
             headers: {
