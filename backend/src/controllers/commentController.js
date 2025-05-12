@@ -38,12 +38,11 @@ exports.likePost = async (req, res) => {
   const { postId } = req.params;
 
   try {
-    const changes = await CommentDAO.toggleLikeDislike(postId, true);
-    if (changes === 0) return res.status(404).json({ error: 'Blog post not found' });
-    res.json({ message: 'Post liked successfully' });
+    const result = await CommentDAO.toggleLikeDislike(postId, req.userId, true);
+    res.json({ message: 'Post liked successfully', action: result.action });
   } catch (err) {
     console.error('Error liking post:', err);
-    res.status(500).json({ error: 'Failed to like post' });
+    res.status(400).json({ error: err.message || 'Failed to like post' });
   }
 };
 
@@ -51,11 +50,23 @@ exports.dislikePost = async (req, res) => {
   const { postId } = req.params;
 
   try {
-    const changes = await CommentDAO.toggleLikeDislike(postId, false);
-    if (changes === 0) return res.status(404).json({ error: 'Blog post not found' });
-    res.json({ message: 'Post disliked successfully' });
+    const result = await CommentDAO.toggleLikeDislike(postId, req.userId, false);
+    res.json({ message: 'Post disliked successfully', action: result.action });
   } catch (err) {
     console.error('Error disliking post:', err);
-    res.status(500).json({ error: 'Failed to dislike post' });
+    res.status(400).json({ error: err.message || 'Failed to dislike post' });
+  }
+};
+
+exports.getUserReaction = async (req, res) => {
+  const { postId } = req.params;
+  const userId = req.userId;
+
+  try {
+    const reaction = await CommentDAO.getUserReaction(postId, userId);
+    res.json({ reaction });
+  } catch (err) {
+    console.error('Error getting user reaction:', err);
+    res.status(500).json({ error: 'Failed to get user reaction' });
   }
 };

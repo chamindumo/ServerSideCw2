@@ -96,6 +96,14 @@ exports.getPostById = async (req, res) => {
     const countryResponse = await axios.get(`https://restcountries.com/v3.1/name/${post.country}`);
     const countryData = countryResponse.data[0];
     const flagUrl = countryData?.flags?.png || null;
+    const countrycapital = countryData?.capital || null;
+
+    // Fix currency extraction
+    let countrycurrenies = null;
+    if (countryData?.currencies && typeof countryData.currencies === 'object') {
+      const currencyCode = Object.keys(countryData.currencies)[0];
+      countrycurrenies = currencyCode ? countryData.currencies[currencyCode]?.name : null;
+    }
 
     // Fetch the user's full name and image
     const user = await UserDAO.getUserById(post.user_id);
@@ -104,6 +112,8 @@ exports.getPostById = async (req, res) => {
     res.json({
       ...post,
       flagUrl,
+      countrycapital,
+      countrycurrenies,
       image_path: post.image_path ? `http://localhost:3000${post.image_path}` : null, // Prefix the image path with the server URL
       posterName: `${user.firstname} ${user.lastname}`,
       posterImage: user.image_path ? `http://localhost:3000${user.image_path}` : null,

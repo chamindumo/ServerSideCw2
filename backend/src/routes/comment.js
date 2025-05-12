@@ -133,4 +133,30 @@ router.post('/:postId/like', verifyToken, commentController.likePost);
  */
 router.post('/:postId/dislike', verifyToken, commentController.dislikePost);
 
+/**
+ * @swagger
+ * /comment/{postId}/reaction:
+ *   get:
+ *     summary: Get user's reaction to a blog post
+ *     tags: [Comment]
+ *     security:
+ *       - bearerAuth: []
+ *       - csrfAuth: [] 
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the blog post
+ *     responses:
+ *       200:
+ *         description: User's reaction status
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get('/:postId/reaction', verifyToken, commentController.getUserReaction);
+
 module.exports = router;

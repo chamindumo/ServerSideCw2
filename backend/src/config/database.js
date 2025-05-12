@@ -143,6 +143,19 @@ db.serialize(() => {
       FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Create the user_likes_dislikes table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS user_likes_dislikes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      is_like BOOLEAN NOT NULL,
+      created_at DATETIME DEFAULT '${getLocalTime()}',
+      FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
 });
 
 module.exports = db;

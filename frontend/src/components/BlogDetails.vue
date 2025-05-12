@@ -24,6 +24,8 @@
       <div class="blog-content">
         <div v-html="sanitizedContent" class="sanitized-content"></div>
         <p><strong>Country:</strong> {{ blog.country }}</p>
+        <p><strong>Capital:</strong> {{ blog.countrycapital[0] }}</p>
+        <p><strong>Currenies:</strong> {{ blog.countrycurrenies	}}</p>
         <p v-if="blog.flagUrl">
           <strong>Flag:</strong>
           <img :src="blog.flagUrl" alt="Country flag" class="country-flag" />
@@ -32,10 +34,18 @@
           <p><strong>Likes:</strong> {{ blog.likes }} | <strong>Dislikes:</strong> {{ blog.dislikes }}</p>
         </div>
         <div class="actions" v-if="isLoggedIn">
-          <button @click="likeBlog" class="like-btn">
+          <button 
+            @click="likeBlog" 
+            class="like-btn"
+            :class="{ 'active': userReaction === 1 }"
+          >
             <i class="fas fa-thumbs-up"></i> 
           </button>
-          <button @click="dislikeBlog" class="dislike-btn">
+          <button 
+            @click="dislikeBlog" 
+            class="dislike-btn"
+            :class="{ 'active': userReaction === 0 }"
+          >
             <i class="fas fa-thumbs-down"></i> 
           </button>
         </div>
@@ -106,6 +116,7 @@ export default {
       showBackToTop: false,
       authorBlogs: [],
       fallbackImage: "https://via.placeholder.com/300x200?text=No+Image",
+      userReaction: null, // 1 for like, 0 for dislike, null for no reaction
     };
   },
   async mounted() {
@@ -115,27 +126,40 @@ export default {
         ...response.data,
         image_path: response.data.image_path ? response.data.image_path : null,
       };
+      
+      // Fetch comments
       const commentsResponse = await api.get(`/comment/${this.id}`);
       this.comments = commentsResponse.data;
+
       if (this.isLoggedIn) {
         try {
+          // Fetch follow status
           const followResponse = await api.get(`/follow/${this.blog.user_id}/status`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("userToken")}`,
             },
           });
           this.isFollowing = followResponse.data.isFollowing;
+
+          // Fetch user's reaction status
+          const reactionResponse = await api.get(`/comment/${this.id}/reaction`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+            },
+          });
+          this.userReaction = reactionResponse.data.reaction;
+          
         } catch (err) {
-          console.warn("Unable to fetch follow status. Defaulting to not following.");
-          this.isFollowing = false;
+          console.warn("Error fetching user status:", err);
         }
       }
+
       // Fetch other blogs by the same author
       const authorBlogsResponse = await api.get(`/blog/user/${this.blog.user_id}`);
       this.authorBlogs = authorBlogsResponse.data.filter((b) => b.id !== this.blog.id);
     } catch (err) {
-      console.error("Error fetching blog details or comments:", err);
-      this.error = "Failed to load blog details or comments. Please try again.";
+      console.error("Error fetching blog details:", err);
+      this.error = "Failed to load blog details. Please try again.";
     } finally {
       this.loading = false;
     }
@@ -154,12 +178,22 @@ export default {
     async likeBlog() {
       if (!this.isLoggedIn) return;
       try {
-        await api.post(`/comment/${this.id}/like`, {}, {
+        const response = await api.post(`/comment/${this.id}/like`, {}, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("userToken")}`,
           },
         });
-        this.blog.likes++;
+        if (response.data.action === "added") {
+          this.blog.likes++;
+          this.userReaction = 1;
+        } else if (response.data.action === "removed") {
+          this.blog.likes--;
+          this.userReaction = null;
+        } else if (response.data.action === "switched") {
+          this.blog.likes++;
+          this.blog.dislikes--;
+          this.userReaction = 1;
+        }
       } catch (err) {
         console.error("Error liking blog:", err);
       }
@@ -167,12 +201,22 @@ export default {
     async dislikeBlog() {
       if (!this.isLoggedIn) return;
       try {
-        await api.post(`/comment/${this.id}/dislike`, {}, {
+        const response = await api.post(`/comment/${this.id}/dislike`, {}, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("userToken")}`,
           },
         });
-        this.blog.dislikes++;
+        if (response.data.action === "added") {
+          this.blog.dislikes++;
+          this.userReaction = 0;
+        } else if (response.data.action === "removed") {
+          this.blog.dislikes--;
+          this.userReaction = null;
+        } else if (response.data.action === "switched") {
+          this.blog.dislikes++;
+          this.blog.likes--;
+          this.userReaction = 0;
+        }
       } catch (err) {
         console.error("Error disliking blog:", err);
       }
@@ -219,10 +263,10 @@ export default {
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
     navigateToBlog(blogId) {
-  this.$router.push({ name: "BlogDetails", params: { id: blogId } }).then(() => {
-    window.location.reload(); // Refresh the page
-  });
-},
+      this.$router.push({ name: "BlogDetails", params: { id: blogId } }).then(() => {
+        window.location.reload(); // Refresh the page
+      });
+    },
   },
 };
 </script>
@@ -292,6 +336,12 @@ export default {
 }
 .dislike-btn:hover {
   background-color: #34495e;
+}
+.like-btn.active {
+  background-color: #42b983;
+}
+.dislike-btn.active {
+  background-color: #e74c3c;
 }
 .followed-text {
   color: #42b983;
@@ -523,6 +573,7 @@ export default {
 
 .back-to-top:hover {
   background-color: #969796;
+
 }
 
 .author-blogs {
