@@ -130,6 +130,8 @@ export default {
       this.searchQuery = "";
       this.searchResults = [];
       this.$router.push({ name: "BlogDetails", params: { id: postId } });
+      window.location.reload();
+
     },
   },
 };
